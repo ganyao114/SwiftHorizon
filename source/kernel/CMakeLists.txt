@@ -1,0 +1,5 @@
+if (LINUX OR ANDROID OR APPLE OR WIN32)
+    add_subdirectory(host)
+else ()
+    add_subdirectory(ams)
+endif ()

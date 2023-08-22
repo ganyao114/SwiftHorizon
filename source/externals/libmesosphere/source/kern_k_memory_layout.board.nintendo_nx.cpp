@@ -13,6 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#if defined(ATMOSPHERE_BOARD_NINTENDO_NX)
 #include <mesosphere.hpp>
 
 namespace ams::kern {
@@ -270,3 +271,5 @@ namespace ams::kern {
     }
 
 }
+
+#endif

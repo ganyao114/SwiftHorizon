@@ -57,7 +57,11 @@
 #define ALIGNED(algn) __attribute__((aligned(algn)))
 #define NORETURN      __attribute__((noreturn))
 #define WEAK_SYMBOL   __attribute__((weak))
+#ifdef __clang__
+#define ALWAYS_INLINE_LAMBDA
+#else
 #define ALWAYS_INLINE_LAMBDA __attribute__((always_inline))
+#endif
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #define NOINLINE      __attribute__((noinline))
 

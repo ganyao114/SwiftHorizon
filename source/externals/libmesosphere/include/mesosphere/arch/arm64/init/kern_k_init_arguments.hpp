@@ -19,16 +19,16 @@
 namespace ams::kern::init {
 
     struct alignas(util::CeilingPowerOfTwo(INIT_ARGUMENTS_SIZE)) KInitArguments {
-        u64 ttbr0;
-        u64 ttbr1;
-        u64 tcr;
-        u64 mair;
-        u64 cpuactlr;
-        u64 cpuectlr;
-        u64 sctlr;
-        u64 sp;
-        u64 entrypoint;
-        u64 argument;
+        u64 ttbr0{};
+        u64 ttbr1{};
+        u64 tcr{};
+        u64 mair{};
+        u64 cpuactlr{};
+        u64 cpuectlr{};
+        u64 sctlr{};
+        u64 sp{};
+        u64 entrypoint{};
+        u64 argument{};
     };
     static_assert(alignof(KInitArguments) == util::CeilingPowerOfTwo(INIT_ARGUMENTS_SIZE));
     static_assert(sizeof(KInitArguments) == std::max(INIT_ARGUMENTS_SIZE, util::CeilingPowerOfTwo(INIT_ARGUMENTS_SIZE)));

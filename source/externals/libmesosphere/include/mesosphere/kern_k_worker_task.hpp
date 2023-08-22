@@ -15,6 +15,7 @@
  */
 #pragma once
 #include <mesosphere/kern_common.hpp>
+#include <mesosphere/kern_k_synchronization_object.hpp>
 
 namespace ams::kern {
 

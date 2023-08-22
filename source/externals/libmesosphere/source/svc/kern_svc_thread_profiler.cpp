@@ -71,7 +71,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetDebugFutureThreadInfo(ams::svc::LastThreadContext *out_context, uint64_t *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
+        Result GetDebugFutureThreadInfo(ams::svc::LastThreadContext *out_context, u64 *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
             /* Only allow invoking the svc on development hardware. */
             R_UNLESS(KTargetSystem::IsDebugMode(), svc::ResultNoThread());
 
@@ -115,7 +115,7 @@ namespace ams::kern::svc {
 
     /* =============================    64 ABI    ============================= */
 
-    Result GetDebugFutureThreadInfo64(ams::svc::lp64::LastThreadContext *out_context, uint64_t *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
+    Result GetDebugFutureThreadInfo64(ams::svc::lp64::LastThreadContext *out_context, u64 *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
         R_RETURN(GetDebugFutureThreadInfo(out_context, out_thread_id, debug_handle, ns));
     }
 
@@ -130,7 +130,7 @@ namespace ams::kern::svc {
 
     /* ============================= 64From32 ABI ============================= */
 
-    Result GetDebugFutureThreadInfo64From32(ams::svc::ilp32::LastThreadContext *out_context, uint64_t *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
+    Result GetDebugFutureThreadInfo64From32(ams::svc::ilp32::LastThreadContext *out_context, u64 *out_thread_id, ams::svc::Handle debug_handle, int64_t ns) {
         ams::svc::LastThreadContext context = {};
         R_TRY(GetDebugFutureThreadInfo(std::addressof(context), out_thread_id, debug_handle, ns));
 

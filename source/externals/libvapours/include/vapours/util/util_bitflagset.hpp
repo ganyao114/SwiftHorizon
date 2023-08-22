@@ -160,7 +160,7 @@ namespace ams::util {
             constexpr ALWAYS_INLINE BitFlagSet<N, T> &Negate(s32 idx) { return this->Set(idx, !this->Test(idx)); }
             constexpr ALWAYS_INLINE BitFlagSet<N, T> &Negate() { ams::util::impl::NegateImpl<StorageCount>(this->_storage); this->Truncate(); return *this; }
 
-            consteval static int GetCount() { return static_cast<int>(N); }
+            constexpr static int GetCount() { return static_cast<int>(N); }
 
             constexpr ALWAYS_INLINE bool IsAnySet() const { return ams::util::impl::IsAnySet<StorageCount>(this->_storage); }
             constexpr ALWAYS_INLINE int  PopCount() const { return ams::util::impl::PopCount<StorageCount>(this->_storage); }

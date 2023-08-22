@@ -15,6 +15,7 @@
  */
 #pragma once
 #include <mesosphere/kern_common.hpp>
+#include <mesosphere/kern_panic.hpp>
 #include <mesosphere/kern_k_typed_address.hpp>
 #include <mesosphere/kern_k_class_token.hpp>
 
@@ -92,8 +93,8 @@ namespace ams::kern {
         protected:
             class TypeObj {
                 private:
-                    const char *m_name;
-                    ClassTokenType m_class_token;
+                    const char *m_name{};
+                    ClassTokenType m_class_token{};
                 public:
                     constexpr explicit TypeObj(const char *n, ClassTokenType tok) : m_name(n), m_class_token(tok) { /* ... */ }
 
@@ -119,10 +120,10 @@ namespace ams::kern {
         private:
             MESOSPHERE_AUTOOBJECT_TRAITS(KAutoObject, KAutoObject);
         private:
-            KAutoObject *m_next_closed_object;
-            ReferenceCount m_ref_count;
+            KAutoObject *m_next_closed_object{};
+            ReferenceCount m_ref_count{};
             #if defined(MESOSPHERE_ENABLE_DEVIRTUALIZED_DYNAMIC_CAST)
-            ClassTokenType m_class_token;
+            ClassTokenType m_class_token{};
             #endif
         public:
             constexpr ALWAYS_INLINE explicit KAutoObject(util::ConstantInitializeTag) : m_next_closed_object(nullptr), m_ref_count(0)
@@ -133,7 +134,7 @@ namespace ams::kern {
                 MESOSPHERE_ASSERT_THIS();
             }
 
-            ALWAYS_INLINE explicit KAutoObject() : m_ref_count(0) { MESOSPHERE_ASSERT_THIS(); }
+            constexpr ALWAYS_INLINE explicit KAutoObject() : m_ref_count(0) { MESOSPHERE_ASSERT_THIS(); }
 
             /* Destroy is responsible for destroying the auto object's resources when ref_count hits zero. */
             virtual void Destroy() { MESOSPHERE_ASSERT_THIS(); }

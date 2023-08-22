@@ -19,9 +19,9 @@
 
 #if defined(ATMOSPHERE_ARCH_ARM64)
 
-    #include <mesosphere/arch/arm64/kern_k_interrupt_controller.hpp>
+    #include <mesosphere/arch/host/kern_k_interrupt_controller.hpp>
     namespace ams::kern {
-        using ams::kern::arch::arm64::KInterruptController;
+        using ams::kern::arch::host::KInterruptController;
     }
 
 #elif defined(ATMOSPHERE_ARCH_ARM)

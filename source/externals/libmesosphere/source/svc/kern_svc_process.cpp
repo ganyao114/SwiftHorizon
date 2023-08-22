@@ -70,7 +70,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetProcessList(int32_t *out_num_processes, KUserPointer<uint64_t *> out_process_ids, int32_t max_out_count) {
+        Result GetProcessList(int32_t *out_num_processes, KUserPointer<u64 *> out_process_ids, int32_t max_out_count) {
             /* Validate that the out count is valid. */
             R_UNLESS((0 <= max_out_count && max_out_count <= static_cast<int32_t>(std::numeric_limits<int32_t>::max() / sizeof(u64))), svc::ResultOutOfRange());
 
@@ -279,7 +279,7 @@ namespace ams::kern::svc {
             }
         }
 
-        Result StartProcess(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, uint64_t main_thread_stack_size) {
+        Result StartProcess(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, u64 main_thread_stack_size) {
             /* Validate stack size. */
             R_UNLESS(main_thread_stack_size == static_cast<size_t>(main_thread_stack_size), svc::ResultOutOfMemory());
 
@@ -371,11 +371,11 @@ namespace ams::kern::svc {
         return ExitProcess();
     }
 
-    Result GetProcessId64(uint64_t *out_process_id, ams::svc::Handle process_handle) {
+    Result GetProcessId64(u64 *out_process_id, ams::svc::Handle process_handle) {
         R_RETURN(GetProcessId(out_process_id, process_handle));
     }
 
-    Result GetProcessList64(int32_t *out_num_processes, KUserPointer<uint64_t *> out_process_ids, int32_t max_out_count) {
+    Result GetProcessList64(int32_t *out_num_processes, KUserPointer<u64 *> out_process_ids, int32_t max_out_count) {
         R_RETURN(GetProcessList(out_num_processes, out_process_ids, max_out_count));
     }
 
@@ -383,7 +383,7 @@ namespace ams::kern::svc {
         R_RETURN(CreateProcess(out_handle, parameters, caps, num_caps));
     }
 
-    Result StartProcess64(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, uint64_t main_thread_stack_size) {
+    Result StartProcess64(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, u64 main_thread_stack_size) {
         R_RETURN(StartProcess(process_handle, priority, core_id, main_thread_stack_size));
     }
 
@@ -401,11 +401,11 @@ namespace ams::kern::svc {
         return ExitProcess();
     }
 
-    Result GetProcessId64From32(uint64_t *out_process_id, ams::svc::Handle process_handle) {
+    Result GetProcessId64From32(u64 *out_process_id, ams::svc::Handle process_handle) {
         R_RETURN(GetProcessId(out_process_id, process_handle));
     }
 
-    Result GetProcessList64From32(int32_t *out_num_processes, KUserPointer<uint64_t *> out_process_ids, int32_t max_out_count) {
+    Result GetProcessList64From32(int32_t *out_num_processes, KUserPointer<u64 *> out_process_ids, int32_t max_out_count) {
         R_RETURN(GetProcessList(out_num_processes, out_process_ids, max_out_count));
     }
 
@@ -413,7 +413,7 @@ namespace ams::kern::svc {
         R_RETURN(CreateProcess(out_handle, parameters, caps, num_caps));
     }
 
-    Result StartProcess64From32(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, uint64_t main_thread_stack_size) {
+    Result StartProcess64From32(ams::svc::Handle process_handle, int32_t priority, int32_t core_id, u64 main_thread_stack_size) {
         R_RETURN(StartProcess(process_handle, priority, core_id, main_thread_stack_size));
     }
 

@@ -31,6 +31,13 @@
         using namespace ams::svc::board::qemu::virt;
     }
 
+#elif defined(ATMOSPHERE_BOARD_HOST_OS)
+
+#include <vapours/svc/board/host/svc_hardware_constants.hpp>
+namespace ams::svc {
+    using namespace ams::svc::board::host;
+}
+
 #else
 
     #error "Unknown board for svc Hardware Constants"

@@ -144,7 +144,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetThreadCoreMask(int32_t *out_core_id, uint64_t *out_affinity_mask, ams::svc::Handle thread_handle) {
+        Result GetThreadCoreMask(int32_t *out_core_id, u64 *out_affinity_mask, ams::svc::Handle thread_handle) {
             /* Get the thread from its handle. */
             KScopedAutoObject thread = GetCurrentProcess().GetHandleTable().GetObject<KThread>(thread_handle);
             R_UNLESS(thread.IsNotNull(), svc::ResultInvalidHandle());
@@ -155,7 +155,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result SetThreadCoreMask(ams::svc::Handle thread_handle, int32_t core_id, uint64_t affinity_mask) {
+        Result SetThreadCoreMask(ams::svc::Handle thread_handle, int32_t core_id, u64 affinity_mask) {
             /* Get the thread from its handle. */
             KScopedAutoObject thread = GetCurrentProcess().GetHandleTable().GetObject<KThread>(thread_handle);
             R_UNLESS(thread.IsNotNull(), svc::ResultInvalidHandle());
@@ -187,7 +187,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetThreadId(uint64_t *out_thread_id, ams::svc::Handle thread_handle) {
+        Result GetThreadId(u64 *out_thread_id, ams::svc::Handle thread_handle) {
             /* Get the thread from its handle. */
             KScopedAutoObject thread = GetCurrentProcess().GetHandleTable().GetObject<KThread>(thread_handle);
             R_UNLESS(thread.IsNotNull(), svc::ResultInvalidHandle());
@@ -216,7 +216,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetThreadList(int32_t *out_num_threads, KUserPointer<uint64_t *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
+        Result GetThreadList(int32_t *out_num_threads, KUserPointer<u64 *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
             /* Validate that the out count is valid. */
             R_UNLESS((0 <= max_out_count && max_out_count <= static_cast<int32_t>(std::numeric_limits<int32_t>::max() / sizeof(u64))), svc::ResultOutOfRange());
 
@@ -283,15 +283,15 @@ namespace ams::kern::svc {
         R_RETURN(SetThreadPriority(thread_handle, priority));
     }
 
-    Result GetThreadCoreMask64(int32_t *out_core_id, uint64_t *out_affinity_mask, ams::svc::Handle thread_handle) {
+    Result GetThreadCoreMask64(int32_t *out_core_id, u64 *out_affinity_mask, ams::svc::Handle thread_handle) {
         R_RETURN(GetThreadCoreMask(out_core_id, out_affinity_mask, thread_handle));
     }
 
-    Result SetThreadCoreMask64(ams::svc::Handle thread_handle, int32_t core_id, uint64_t affinity_mask) {
+    Result SetThreadCoreMask64(ams::svc::Handle thread_handle, int32_t core_id, u64 affinity_mask) {
         R_RETURN(SetThreadCoreMask(thread_handle, core_id, affinity_mask));
     }
 
-    Result GetThreadId64(uint64_t *out_thread_id, ams::svc::Handle thread_handle) {
+    Result GetThreadId64(u64 *out_thread_id, ams::svc::Handle thread_handle) {
         R_RETURN(GetThreadId(out_thread_id, thread_handle));
     }
 
@@ -299,7 +299,7 @@ namespace ams::kern::svc {
         R_RETURN(GetThreadContext3(out_context, thread_handle));
     }
 
-    Result GetThreadList64(int32_t *out_num_threads, KUserPointer<uint64_t *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
+    Result GetThreadList64(int32_t *out_num_threads, KUserPointer<u64 *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
         R_RETURN(GetThreadList(out_num_threads, out_thread_ids, max_out_count, debug_handle));
     }
 
@@ -329,15 +329,15 @@ namespace ams::kern::svc {
         R_RETURN(SetThreadPriority(thread_handle, priority));
     }
 
-    Result GetThreadCoreMask64From32(int32_t *out_core_id, uint64_t *out_affinity_mask, ams::svc::Handle thread_handle) {
+    Result GetThreadCoreMask64From32(int32_t *out_core_id, u64 *out_affinity_mask, ams::svc::Handle thread_handle) {
         R_RETURN(GetThreadCoreMask(out_core_id, out_affinity_mask, thread_handle));
     }
 
-    Result SetThreadCoreMask64From32(ams::svc::Handle thread_handle, int32_t core_id, uint64_t affinity_mask) {
+    Result SetThreadCoreMask64From32(ams::svc::Handle thread_handle, int32_t core_id, u64 affinity_mask) {
         R_RETURN(SetThreadCoreMask(thread_handle, core_id, affinity_mask));
     }
 
-    Result GetThreadId64From32(uint64_t *out_thread_id, ams::svc::Handle thread_handle) {
+    Result GetThreadId64From32(u64 *out_thread_id, ams::svc::Handle thread_handle) {
         R_RETURN(GetThreadId(out_thread_id, thread_handle));
     }
 
@@ -345,7 +345,7 @@ namespace ams::kern::svc {
         R_RETURN(GetThreadContext3(out_context, thread_handle));
     }
 
-    Result GetThreadList64From32(int32_t *out_num_threads, KUserPointer<uint64_t *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
+    Result GetThreadList64From32(int32_t *out_num_threads, KUserPointer<u64 *> out_thread_ids, int32_t max_out_count, ams::svc::Handle debug_handle) {
         R_RETURN(GetThreadList(out_num_threads, out_thread_ids, max_out_count, debug_handle));
     }
 

@@ -18,7 +18,9 @@
 #include <mesosphere/init/kern_init_page_table_select.hpp>
 #include <mesosphere/kern_k_memory_region.hpp>
 
-#if defined(ATMOSPHERE_BOARD_NINTENDO_NX)
+#if defined(ATMOSPHERE_BOARD_HOST_OS)
+    #include <mesosphere/board/host/kern_k_memory_layout.hpp>
+#elif defined(ATMOSPHERE_BOARD_NINTENDO_NX)
     #include <mesosphere/board/nintendo/nx/kern_k_memory_layout.hpp>
 #elif defined(ATMOSPHERE_BOARD_QEMU_VIRT)
     #include <mesosphere/board/qemu/virt/kern_k_memory_layout.hpp>
@@ -170,7 +172,7 @@ namespace ams::kern {
             static MESOSPHERE_NOINLINE_IF_DEBUG bool IsLinearMappedPhysicalAddress(const KMemoryRegion *&region, KPhysicalAddress address)  { return IsTypedAddress(region, address, GetPhysicalLinearMemoryRegionTree(), static_cast<KMemoryRegionType>(KMemoryRegionAttr_LinearMapped)); }
             static MESOSPHERE_NOINLINE_IF_DEBUG bool IsLinearMappedPhysicalAddress(const KMemoryRegion *&region, KPhysicalAddress address, size_t size) { return IsTypedAddress(region, address, size, GetPhysicalLinearMemoryRegionTree(), static_cast<KMemoryRegionType>(KMemoryRegionAttr_LinearMapped)); }
 
-            static  std::tuple<size_t, size_t> GetTotalAndKernelMemorySizes() {
+            static std::tuple<size_t, size_t> GetTotalAndKernelMemorySizes() {
                 size_t total_size = 0, kernel_size = 0;
                 for (const auto &region : GetPhysicalMemoryRegionTree()) {
                     if (region.IsDerivedFrom(KMemoryRegionType_Dram)) {

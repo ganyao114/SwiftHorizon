@@ -433,21 +433,21 @@ namespace ams::kern::svc {
 
     /* =============================    64 ABI    ============================= */
 
-    Result GetInfo64(uint64_t *out, ams::svc::InfoType info_type, ams::svc::Handle handle, uint64_t info_subtype) {
+    Result GetInfo64(u64 *out, ams::svc::InfoType info_type, ams::svc::Handle handle, u64 info_subtype) {
         R_RETURN(GetInfo(out, info_type, handle, info_subtype));
     }
 
-    Result GetSystemInfo64(uint64_t *out, ams::svc::SystemInfoType info_type, ams::svc::Handle handle, uint64_t info_subtype) {
+    Result GetSystemInfo64(u64 *out, ams::svc::SystemInfoType info_type, ams::svc::Handle handle, u64 info_subtype) {
         R_RETURN(GetSystemInfo(out, info_type, handle, info_subtype));
     }
 
     /* ============================= 64From32 ABI ============================= */
 
-    Result GetInfo64From32(uint64_t *out, ams::svc::InfoType info_type, ams::svc::Handle handle, uint64_t info_subtype) {
+    Result GetInfo64From32(u64 *out, ams::svc::InfoType info_type, ams::svc::Handle handle, u64 info_subtype) {
         R_RETURN(GetInfo(out, info_type, handle, info_subtype));
     }
 
-    Result GetSystemInfo64From32(uint64_t *out, ams::svc::SystemInfoType info_type, ams::svc::Handle handle, uint64_t info_subtype) {
+    Result GetSystemInfo64From32(u64 *out, ams::svc::SystemInfoType info_type, ams::svc::Handle handle, u64 info_subtype) {
         R_RETURN(GetSystemInfo(out, info_type, handle, info_subtype));
     }
 

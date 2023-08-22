@@ -16,13 +16,27 @@
 #pragma once
 #include <mesosphere/kern_common.hpp>
 
-#ifdef ATMOSPHERE_ARCH_ARM64
+#ifdef ATMOSPHERE_BOARD_HOST_OS
+#include <mesosphere/arch/host/init/kern_k_init_page_table.hpp>
+
+namespace ams::kern::init {
+    using ams::kern::arch::host::PageTableEntry;
+    using ams::kern::arch::host::init::KInitialPageTable;
+    using ams::kern::arch::host::init::KInitialPageAllocator;
+    using ams::kern::arch::host::init::IsInitialPageAllocator;
+    using ams::kern::arch::host::L1BlockSize;
+    using ams::kern::arch::host::MaxPageTableEntries;
+}
+#elifdef ATMOSPHERE_ARCH_ARM64
     #include <mesosphere/arch/arm64/init/kern_k_init_page_table.hpp>
 
     namespace ams::kern::init {
         using ams::kern::arch::arm64::PageTableEntry;
         using ams::kern::arch::arm64::init::KInitialPageTable;
         using ams::kern::arch::arm64::init::KInitialPageAllocator;
+        using ams::kern::arch::arm64::init::IsInitialPageAllocator;
+        using ams::kern::arch::arm64::L1BlockSize;
+        using ams::kern::arch::arm64::MaxPageTableEntries;
     }
 #else
     #error "Unknown architecture for KInitialPageTable"

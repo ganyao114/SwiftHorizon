@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#ifdef ATMOSPHERE_ARCH_ARM64
+#if defined(ATMOSPHERE_ARCH_ARM64)
     #include <mesosphere/arch/arm64/kern_k_thread_context.hpp>
 
     namespace ams::kern {

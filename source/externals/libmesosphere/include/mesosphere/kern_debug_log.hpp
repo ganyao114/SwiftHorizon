@@ -45,6 +45,8 @@ namespace ams::kern {
         #define MESOSPHERE_DEBUG_LOG_USE_UART
     #elif defined(ATMOSPHERE_BOARD_QEMU_VIRT)
         #define MESOSPHERE_DEBUG_LOG_USE_SEMIHOSTING
+    #elif defined(ATMOSPHERE_BOARD_HOST_OS)
+        #define MESOSPHERE_DEBUG_LOG_USE_STDOUT
     #else
         #error "Unknown board for Default Debug Log Source"
     #endif

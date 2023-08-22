@@ -30,3 +30,6 @@
     AMS_PRAGMA(pack(pop))
 
 #define AMS_CONCEPTS_REQUIRES_IF_SUPPORTED(__EXPR__)
+
+#pragma clang diagnostic ignored "-Winvalid-constexpr"
+#pragma clang diagnostic ignored "-Wconstexpr-not-const"

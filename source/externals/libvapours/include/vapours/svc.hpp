@@ -19,7 +19,7 @@
 #include <vapours/assert.hpp>
 #include <vapours/results.hpp>
 
-#if defined(ATMOSPHERE_OS_HORIZON)
+#if defined(ATMOSPHERE_OS_HORIZON) or defined(ATMOSPHERE_BOARD_HOST_OS)
 #include <vapours/svc/svc_types.hpp>
 #include <vapours/svc/svc_definitions.hpp>
 #include <vapours/svc/svc_memory_map.hpp>

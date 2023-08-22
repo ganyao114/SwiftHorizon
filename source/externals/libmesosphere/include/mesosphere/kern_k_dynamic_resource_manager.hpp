@@ -42,7 +42,7 @@ namespace ams::kern {
                 m_slab_heap      = slab_heap;
             }
 
-            T *Allocate() const {
+            [[nodiscard]] T *Allocate() const {
                 return m_slab_heap->Allocate(m_page_allocator);
             }
 

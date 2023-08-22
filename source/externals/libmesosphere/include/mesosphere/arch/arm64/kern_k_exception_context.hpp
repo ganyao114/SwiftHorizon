@@ -19,13 +19,13 @@
 namespace ams::kern::arch::arm64 {
 
     struct KExceptionContext {
-        u64 x[(30 - 0) + 1];
-        u64 sp;
-        u64 pc;
-        u32 psr;
-        u32 write;
-        u64 tpidr;
-        u64 reserved;
+        u64 x[(30 - 0) + 1]{};
+        u64 sp{};
+        u64 pc{};
+        u32 psr{};
+        u32 write{};
+        u64 tpidr{};
+        u64 reserved{};
 
         constexpr void GetSvcThreadContext(ams::svc::LastThreadContext *out) const {
             if ((this->psr & 0x10) == 0) {

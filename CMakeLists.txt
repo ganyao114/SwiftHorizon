@@ -24,3 +24,4 @@ endif()
 
 add_subdirectory(source)
 add_executable(SwiftHorizon main.cpp)
+target_link_libraries(SwiftHorizon PRIVATE cpu_core kernel_core)

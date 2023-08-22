@@ -17,7 +17,14 @@
 #include <mesosphere/kern_common.hpp>
 #include <mesosphere/kern_select_interrupt_name.hpp>
 
-#if defined(ATMOSPHERE_ARCH_ARM64)
+#if defined(ATMOSPHERE_BOARD_HOST_OS)
+
+    #include <mesosphere/arch/host/kern_k_interrupt_manager.hpp>
+    namespace ams::kern {
+        using ams::kern::arch::host::KInterruptManager;
+    }
+
+#elif defined(ATMOSPHERE_ARCH_ARM64)
 
     #include <mesosphere/arch/arm64/kern_k_interrupt_manager.hpp>
     namespace ams::kern {

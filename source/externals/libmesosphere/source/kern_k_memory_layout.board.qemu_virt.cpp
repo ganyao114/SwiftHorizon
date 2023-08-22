@@ -15,6 +15,8 @@
  */
 #include <mesosphere.hpp>
 
+#if defined(ATMOSPHERE_BOARD_QEMU_VIRT)
+
 namespace ams::kern {
 
     namespace {
@@ -137,3 +139,5 @@ namespace ams::kern {
     }
 
 }
+
+#endif

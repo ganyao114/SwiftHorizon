@@ -22,6 +22,7 @@
 #include <mesosphere/kern_k_current_context.hpp>
 #include <mesosphere/kern_k_timer_task.hpp>
 #include <mesosphere/kern_k_worker_task.hpp>
+#include <mesosphere/kern_k_exception_context.hpp>
 
 namespace ams::kern {
 

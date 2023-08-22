@@ -40,11 +40,6 @@ namespace ams::kern {
     void KDebugLogImpl::Restore() {
         /* ... */
     }
-
-#else
-
-    #error "Unknown Debug device!"
-
 #endif
 
 }

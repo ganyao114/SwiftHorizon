@@ -173,10 +173,6 @@ namespace ams::kern {
         std::memcpy(GetVoidPointer(g_debug_iram_address), g_saved_buffer, RingBufferSize);
     }
 
-#else
-
-    #error "Unknown Debug UART device!"
-
 #endif
 
 }

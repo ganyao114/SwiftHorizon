@@ -16,7 +16,18 @@
 #pragma once
 #include <mesosphere/kern_common.hpp>
 
-#if defined(ATMOSPHERE_ARCH_ARM64)
+#if defined(ATMOSPHERE_BOARD_HOST_OS)
+
+    #include <mesosphere/arch/host/kern_k_page_table.hpp>
+    #include <mesosphere/arch/host/kern_k_supervisor_page_table.hpp>
+    #include <mesosphere/arch/host/kern_k_process_page_table.hpp>
+    namespace ams::kern {
+        using ams::kern::arch::host::KPageTable;
+        using ams::kern::arch::host::KSupervisorPageTable;
+        using ams::kern::arch::host::KProcessPageTable;
+    }
+
+#elif defined(ATMOSPHERE_ARCH_ARM64)
 
     #include <mesosphere/arch/arm64/kern_k_page_table.hpp>
     #include <mesosphere/arch/arm64/kern_k_supervisor_page_table.hpp>

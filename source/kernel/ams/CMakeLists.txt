@@ -1,0 +1,1 @@
+add_library(kernel_core STATIC kern_kernel_instantiations.cpp)

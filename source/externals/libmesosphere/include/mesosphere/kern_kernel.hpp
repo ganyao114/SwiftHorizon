@@ -28,9 +28,9 @@
 namespace ams::kern {
 
     class KThread;
-    class KHardwareTimer;
+//    class KHardwareTimer;
     class KResourceLimit;
-    class KInterruptManager;
+//    class KInterruptManager;
     class KInterruptTaskManager;
     class KScheduler;
     class KMemoryManager;
@@ -39,18 +39,18 @@ namespace ams::kern {
     class KBlockInfoManager;
     class KUnsafeMemory;
 
-#if defined(ATMOSPHERE_ARCH_ARM64)
-
-    namespace arch::arm64 {
-        class KSupervisorPageTable;
-    }
-    using ams::kern::arch::arm64::KSupervisorPageTable;
-
-#else
-
-    #error "Unknown architecture for KSupervisorPageTable forward declare"
-
-#endif
+//#if defined(ATMOSPHERE_ARCH_ARM64)
+//
+//    namespace arch::arm64 {
+//        class KSupervisorPageTable;
+//    }
+//    using ams::kern::arch::arm64::KSupervisorPageTable;
+//
+//#else
+//
+//    #error "Unknown architecture for KSupervisorPageTable forward declare"
+//
+//#endif
 
     class Kernel {
         public:

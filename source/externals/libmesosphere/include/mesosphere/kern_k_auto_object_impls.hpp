@@ -89,7 +89,7 @@ namespace ams::kern {
         using AutoObjectWithListComparator = AutoObjectWithListComparatorImpl<typename std::conditional<IsAutoObjectWithSpecializedGetId<T>, T, KAutoObjectWithList>::type>;
 
         template<typename T>
-        using TrueObjectContainerListType = typename KAutoObjectWithListContainer<T>::ListType<AutoObjectWithListComparator<T>>;
+        using TrueObjectContainerListType = typename KAutoObjectWithListContainer<T>::template ListType<AutoObjectWithListComparator<T>>;
 
         template<typename T>
         ALWAYS_INLINE TrueObjectContainerListType<T> &GetTrueObjectContainerList(typename KAutoObjectWithListContainer<T>::DummyListType &l) {

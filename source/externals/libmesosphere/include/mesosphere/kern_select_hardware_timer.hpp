@@ -15,8 +15,14 @@
  */
 #pragma once
 #include <mesosphere/kern_common.hpp>
+#if defined(ATMOSPHERE_BOARD_HOST_OS)
 
-#if defined(ATMOSPHERE_ARCH_ARM64)
+    #include <mesosphere/arch/host/kern_k_hardware_timer.hpp>
+    namespace ams::kern {
+        using ams::kern::arch::host::KHardwareTimer;
+    }
+
+#elif defined(ATMOSPHERE_ARCH_ARM64)
 
     #include <mesosphere/arch/arm64/kern_k_hardware_timer.hpp>
     namespace ams::kern {

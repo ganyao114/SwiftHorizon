@@ -23,7 +23,7 @@ namespace ams::kern::svc {
 
         constexpr inline int32_t MaximumDebuggableThreadCount = 0x60;
 
-        Result DebugActiveProcess(ams::svc::Handle *out_handle, uint64_t process_id) {
+        Result DebugActiveProcess(ams::svc::Handle *out_handle, u64 process_id) {
             /* Get the process from its id. */
             KProcess *process = KProcess::GetProcessFromId(process_id);
             R_UNLESS(process != nullptr, svc::ResultInvalidProcessId());
@@ -109,7 +109,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result ContinueDebugEventImpl(ams::svc::Handle debug_handle, uint32_t flags, const uint64_t *thread_ids, int32_t num_thread_ids) {
+        Result ContinueDebugEventImpl(ams::svc::Handle debug_handle, uint32_t flags, const u64 *thread_ids, int32_t num_thread_ids) {
             /* Get the debug object. */
             KScopedAutoObject debug = GetCurrentProcess().GetHandleTable().GetObject<KDebug>(debug_handle);
             R_UNLESS(debug.IsNotNull(), svc::ResultInvalidHandle());
@@ -120,7 +120,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result ContinueDebugEvent(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const uint64_t *> user_thread_ids, int32_t num_thread_ids) {
+        Result ContinueDebugEvent(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const u64 *> user_thread_ids, int32_t num_thread_ids) {
             /* Only allow invoking the svc on development hardware. */
             R_UNLESS(KTargetSystem::IsDebugMode(), svc::ResultNotImplemented());
 
@@ -135,7 +135,7 @@ namespace ams::kern::svc {
             R_UNLESS((0 <= num_thread_ids && num_thread_ids <= MaximumDebuggableThreadCount), svc::ResultOutOfRange());
 
             /* Copy the threads from userspace. */
-            uint64_t thread_ids[MaximumDebuggableThreadCount];
+            u64 thread_ids[MaximumDebuggableThreadCount];
             if (num_thread_ids > 0) {
                 R_TRY(user_thread_ids.CopyArrayTo(thread_ids, num_thread_ids));
             }
@@ -146,7 +146,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result LegacyContinueDebugEvent(ams::svc::Handle debug_handle, uint32_t flags, uint64_t thread_id) {
+        Result LegacyContinueDebugEvent(ams::svc::Handle debug_handle, uint32_t flags, u64 thread_id) {
             /* Only allow invoking the svc on development hardware. */
             R_UNLESS(KTargetSystem::IsDebugMode(), svc::ResultNotImplemented());
 
@@ -163,7 +163,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetDebugThreadContext(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, uint64_t thread_id, uint32_t context_flags) {
+        Result GetDebugThreadContext(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, u64 thread_id, uint32_t context_flags) {
             /* Validate the context flags. */
             R_UNLESS((context_flags | ams::svc::ThreadContextFlag_All) == ams::svc::ThreadContextFlag_All, svc::ResultInvalidEnumValue());
 
@@ -181,7 +181,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result SetDebugThreadContext(ams::svc::Handle debug_handle, uint64_t thread_id, KUserPointer<const ams::svc::ThreadContext *> user_context, uint32_t context_flags) {
+        Result SetDebugThreadContext(ams::svc::Handle debug_handle, u64 thread_id, KUserPointer<const ams::svc::ThreadContext *> user_context, uint32_t context_flags) {
             /* Only allow invoking the svc on development hardware. */
             R_UNLESS(KTargetSystem::IsDebugMode(), svc::ResultNotImplemented());
 
@@ -231,7 +231,7 @@ namespace ams::kern::svc {
         }
 
         template<typename T>
-        Result QueryDebugProcessMemory(KUserPointer<T *> out_memory_info, ams::svc::PageInfo *out_page_info, ams::svc::Handle debug_handle, uint64_t address) {
+        Result QueryDebugProcessMemory(KUserPointer<T *> out_memory_info, ams::svc::PageInfo *out_page_info, ams::svc::Handle debug_handle, u64 address) {
             /* Get an ams::svc::MemoryInfo for the region. */
             ams::svc::MemoryInfo info = {};
             R_TRY(QueryDebugProcessMemory(std::addressof(info), out_page_info, debug_handle, address));
@@ -295,7 +295,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result SetHardwareBreakPoint(ams::svc::HardwareBreakPointRegisterName name, uint64_t flags, uint64_t value) {
+        Result SetHardwareBreakPoint(ams::svc::HardwareBreakPointRegisterName name, u64 flags, u64 value) {
             /* Only allow invoking the svc on development hardware. */
             R_UNLESS(KTargetSystem::IsDebugMode(), svc::ResultNotImplemented());
 
@@ -305,7 +305,7 @@ namespace ams::kern::svc {
             R_SUCCEED();
         }
 
-        Result GetDebugThreadParam(uint64_t *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, uint64_t thread_id, ams::svc::DebugThreadParam param) {
+        Result GetDebugThreadParam(u64 *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, u64 thread_id, ams::svc::DebugThreadParam param) {
             /* Get the debug object. */
             KScopedAutoObject debug = GetCurrentProcess().GetHandleTable().GetObject<KDebug>(debug_handle);
             R_UNLESS(debug.IsNotNull(), svc::ResultInvalidHandle());
@@ -423,7 +423,7 @@ namespace ams::kern::svc {
 
     /* =============================    64 ABI    ============================= */
 
-    Result DebugActiveProcess64(ams::svc::Handle *out_handle, uint64_t process_id) {
+    Result DebugActiveProcess64(ams::svc::Handle *out_handle, u64 process_id) {
         R_RETURN(DebugActiveProcess(out_handle, process_id));
     }
 
@@ -439,19 +439,19 @@ namespace ams::kern::svc {
         R_RETURN(GetDebugEvent(out_info, debug_handle));
     }
 
-    Result ContinueDebugEvent64(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const uint64_t *> thread_ids, int32_t num_thread_ids) {
+    Result ContinueDebugEvent64(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const u64 *> thread_ids, int32_t num_thread_ids) {
         R_RETURN(ContinueDebugEvent(debug_handle, flags, thread_ids, num_thread_ids));
     }
 
-    Result LegacyContinueDebugEvent64(ams::svc::Handle debug_handle, uint32_t flags, uint64_t thread_id) {
+    Result LegacyContinueDebugEvent64(ams::svc::Handle debug_handle, uint32_t flags, u64 thread_id) {
         R_RETURN(LegacyContinueDebugEvent(debug_handle, flags, thread_id));
     }
 
-    Result GetDebugThreadContext64(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, uint64_t thread_id, uint32_t context_flags) {
+    Result GetDebugThreadContext64(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, u64 thread_id, uint32_t context_flags) {
         R_RETURN(GetDebugThreadContext(out_context, debug_handle, thread_id, context_flags));
     }
 
-    Result SetDebugThreadContext64(ams::svc::Handle debug_handle, uint64_t thread_id, KUserPointer<const ams::svc::ThreadContext *> context, uint32_t context_flags) {
+    Result SetDebugThreadContext64(ams::svc::Handle debug_handle, u64 thread_id, KUserPointer<const ams::svc::ThreadContext *> context, uint32_t context_flags) {
         R_RETURN(SetDebugThreadContext(debug_handle, thread_id, context, context_flags));
     }
 
@@ -467,17 +467,17 @@ namespace ams::kern::svc {
         R_RETURN(WriteDebugProcessMemory(debug_handle, buffer, address, size));
     }
 
-    Result SetHardwareBreakPoint64(ams::svc::HardwareBreakPointRegisterName name, uint64_t flags, uint64_t value) {
+    Result SetHardwareBreakPoint64(ams::svc::HardwareBreakPointRegisterName name, u64 flags, u64 value) {
         R_RETURN(SetHardwareBreakPoint(name, flags, value));
     }
 
-    Result GetDebugThreadParam64(uint64_t *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, uint64_t thread_id, ams::svc::DebugThreadParam param) {
+    Result GetDebugThreadParam64(u64 *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, u64 thread_id, ams::svc::DebugThreadParam param) {
         R_RETURN(GetDebugThreadParam(out_64, out_32, debug_handle, thread_id, param));
     }
 
     /* ============================= 64From32 ABI ============================= */
 
-    Result DebugActiveProcess64From32(ams::svc::Handle *out_handle, uint64_t process_id) {
+    Result DebugActiveProcess64From32(ams::svc::Handle *out_handle, u64 process_id) {
         R_RETURN(DebugActiveProcess(out_handle, process_id));
     }
 
@@ -493,19 +493,19 @@ namespace ams::kern::svc {
         R_RETURN(GetDebugEvent(out_info, debug_handle));
     }
 
-    Result ContinueDebugEvent64From32(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const uint64_t *> thread_ids, int32_t num_thread_ids) {
+    Result ContinueDebugEvent64From32(ams::svc::Handle debug_handle, uint32_t flags, KUserPointer<const u64 *> thread_ids, int32_t num_thread_ids) {
         R_RETURN(ContinueDebugEvent(debug_handle, flags, thread_ids, num_thread_ids));
     }
 
-    Result LegacyContinueDebugEvent64From32(ams::svc::Handle debug_handle, uint32_t flags, uint64_t thread_id) {
+    Result LegacyContinueDebugEvent64From32(ams::svc::Handle debug_handle, uint32_t flags, u64 thread_id) {
         R_RETURN(LegacyContinueDebugEvent(debug_handle, flags, thread_id));
     }
 
-    Result GetDebugThreadContext64From32(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, uint64_t thread_id, uint32_t context_flags) {
+    Result GetDebugThreadContext64From32(KUserPointer<ams::svc::ThreadContext *> out_context, ams::svc::Handle debug_handle, u64 thread_id, uint32_t context_flags) {
         R_RETURN(GetDebugThreadContext(out_context, debug_handle, thread_id, context_flags));
     }
 
-    Result SetDebugThreadContext64From32(ams::svc::Handle debug_handle, uint64_t thread_id, KUserPointer<const ams::svc::ThreadContext *> context, uint32_t context_flags) {
+    Result SetDebugThreadContext64From32(ams::svc::Handle debug_handle, u64 thread_id, KUserPointer<const ams::svc::ThreadContext *> context, uint32_t context_flags) {
         R_RETURN(SetDebugThreadContext(debug_handle, thread_id, context, context_flags));
     }
 
@@ -521,11 +521,11 @@ namespace ams::kern::svc {
         R_RETURN(WriteDebugProcessMemory(debug_handle, buffer, address, size));
     }
 
-    Result SetHardwareBreakPoint64From32(ams::svc::HardwareBreakPointRegisterName name, uint64_t flags, uint64_t value) {
+    Result SetHardwareBreakPoint64From32(ams::svc::HardwareBreakPointRegisterName name, u64 flags, u64 value) {
         R_RETURN(SetHardwareBreakPoint(name, flags, value));
     }
 
-    Result GetDebugThreadParam64From32(uint64_t *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, uint64_t thread_id, ams::svc::DebugThreadParam param) {
+    Result GetDebugThreadParam64From32(u64 *out_64, uint32_t *out_32, ams::svc::Handle debug_handle, u64 thread_id, ams::svc::DebugThreadParam param) {
         R_RETURN(GetDebugThreadParam(out_64, out_32, debug_handle, thread_id, param));
     }
 

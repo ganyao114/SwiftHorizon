@@ -17,14 +17,21 @@
 #include <mesosphere/kern_common.hpp>
 #include <mesosphere/kern_k_system_control_base.hpp>
 
-#ifdef ATMOSPHERE_BOARD_NINTENDO_NX
+#ifdef ATMOSPHERE_BOARD_HOST_OS
+#include <mesosphere/board/host/kern_k_system_control.hpp>
+
+namespace ams::kern {
+    using ams::kern::board::host::KSystemControl;
+}
+
+#elifdef ATMOSPHERE_BOARD_NINTENDO_NX
     #include <mesosphere/board/nintendo/nx/kern_k_system_control.hpp>
 
     namespace ams::kern {
         using ams::kern::board::nintendo::nx::KSystemControl;
     }
 
-#elif defined(ATMOSPHERE_BOARD_QEMU_VIRT)
+#elifdef ATMOSPHERE_BOARD_QEMU_VIRT
     #include <mesosphere/board/qemu/virt/kern_k_system_control.hpp>
 
     namespace ams::kern {
