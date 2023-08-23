@@ -246,8 +246,8 @@ namespace ams::util {
             ALWAYS_INLINE       volatile StorageType *GetStoragePointer()       { return reinterpret_cast<      volatile StorageType *>(std::addressof(m_v)); }
             ALWAYS_INLINE const volatile StorageType *GetStoragePointer() const { return reinterpret_cast<const volatile StorageType *>(std::addressof(m_v)); }
         public:
-            ALWAYS_INLINE Atomic() { /* ... */ }
-            constexpr ALWAYS_INLINE Atomic(T v) : m_v(ConvertToStorage(v)) { /* ... */ }
+            constexpr ALWAYS_INLINE Atomic() : m_v{} { /* ... */ }
+            constexpr ALWAYS_INLINE Atomic(T v) : m_v{ConvertToStorage(v)} { /* ... */ }
 
             constexpr ALWAYS_INLINE T operator=(T desired) {
                 if (std::is_constant_evaluated()) {

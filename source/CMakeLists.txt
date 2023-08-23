@@ -19,7 +19,6 @@ message(STATUS "Target architecture: ${ARCHITECTURE}")
 # Setup platform
 add_definitions(-DATMOSPHERE_IS_MESOSPHERE=1)
 add_definitions(-DATMOSPHERE_GIT_REVISION="1.0")
-add_definitions(-DMESOSPHERE_ENABLE_THIS_ASSERT=1)
 add_definitions(-DMESOSPHERE_BUILD_FOR_AUDITING=1)
 if (LINUX OR ANDROID)
     add_definitions(-DATMOSPHERE_OS_LINUX=1)

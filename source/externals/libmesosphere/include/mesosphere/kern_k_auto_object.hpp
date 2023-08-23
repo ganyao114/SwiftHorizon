@@ -120,10 +120,10 @@ namespace ams::kern {
         private:
             MESOSPHERE_AUTOOBJECT_TRAITS(KAutoObject, KAutoObject);
         private:
-            KAutoObject *m_next_closed_object{};
-            ReferenceCount m_ref_count{};
+            KAutoObject *m_next_closed_object;
+            ReferenceCount m_ref_count;
             #if defined(MESOSPHERE_ENABLE_DEVIRTUALIZED_DYNAMIC_CAST)
-            ClassTokenType m_class_token{};
+            ClassTokenType m_class_token;
             #endif
         public:
             constexpr ALWAYS_INLINE explicit KAutoObject(util::ConstantInitializeTag) : m_next_closed_object(nullptr), m_ref_count(0)

@@ -51,11 +51,11 @@ namespace ams::kern {
                 KThread m_thread;
                 KThreadArray<N - 1> m_next;
 
-                consteval RecursiveHolder() : m_thread{util::ConstantInitialize}, m_next() { /* ... */ }
+                constexpr RecursiveHolder() : m_thread{util::ConstantInitialize}, m_next() { /* ... */ }
             } m_holder;
             KThread m_arr[N];
 
-            consteval KThreadArray() : m_holder() { /* ... */ }
+            constexpr KThreadArray() : m_holder() { /* ... */ }
         };
 
         template<>
@@ -63,11 +63,11 @@ namespace ams::kern {
             struct RecursiveHolder {
                 KThread m_thread;
 
-                consteval RecursiveHolder() : m_thread{util::ConstantInitialize} { /* ... */ }
+                constexpr RecursiveHolder() : m_thread{util::ConstantInitialize} { /* ... */ }
             } m_holder;
             KThread m_arr[1];
 
-            consteval KThreadArray() : m_holder() { /* ... */ }
+            constexpr KThreadArray() : m_holder() { /* ... */ }
         };
 
         template<size_t Ix>
