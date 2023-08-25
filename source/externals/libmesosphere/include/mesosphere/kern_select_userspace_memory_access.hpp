@@ -16,7 +16,17 @@
 #pragma once
 #include <mesosphere/kern_common.hpp>
 
-#ifdef ATMOSPHERE_ARCH_ARM64
+#if defined(ATMOSPHERE_BOARD_HOST_OS)
+
+    #include <mesosphere/arch/host/kern_userspace_memory_access.hpp>
+
+    namespace ams::kern {
+
+        using ams::kern::arch::host::UserspaceAccess;
+
+    }
+
+#elif defined(ATMOSPHERE_ARCH_ARM64)
     #include <mesosphere/arch/arm64/kern_userspace_memory_access.hpp>
 
     namespace ams::kern {
