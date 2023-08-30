@@ -107,19 +107,19 @@ namespace ams::kern::arch::host {
         private:
             [[nodiscard]] static ALWAYS_INLINE u32 GetInterruptsEnabledState() {
                 u64 intr_state;
-                __asm__ __volatile__("mrs   %[intr_state], daif\n"
-                                     "ubfx  %[intr_state], %[intr_state], #7, #1"
-                                     : [intr_state]"=r"(intr_state)
-                                     :: "memory");
+//                __asm__ __volatile__("mrs   %[intr_state], daif\n"
+//                                     "ubfx  %[intr_state], %[intr_state], #7, #1"
+//                                     : [intr_state]"=r"(intr_state)
+//                                     :: "memory");
                 return intr_state;
             }
         public:
             static ALWAYS_INLINE void EnableInterrupts() {
-                __asm__ __volatile__("msr   daifclr, #2" ::: "memory");
+//                __asm__ __volatile__("msr   daifclr, #2" ::: "memory");
             }
 
             static ALWAYS_INLINE void DisableInterrupts() {
-                __asm__ __volatile__("msr   daifset, #2" ::: "memory");
+//                __asm__ __volatile__("msr   daifset, #2" ::: "memory");
             }
 
             [[nodiscard]] static ALWAYS_INLINE u32 GetInterruptsEnabledStateAndDisableInterrupts() {
@@ -136,12 +136,12 @@ namespace ams::kern::arch::host {
 
             static ALWAYS_INLINE void RestoreInterrupts(u32 intr_state) {
                 u64 tmp;
-                __asm__ __volatile__("mrs   %[tmp], daif\n"
-                                     "bfi   %[tmp], %[intr_state], #7, #1\n"
-                                     "msr daif, %[tmp]"
-                                     : [tmp]"=&r"(tmp)
-                                     : [intr_state]"r"(intr_state)
-                                     : "memory");
+//                __asm__ __volatile__("mrs   %[tmp], daif\n"
+//                                     "bfi   %[tmp], %[intr_state], #7, #1\n"
+//                                     "msr daif, %[tmp]"
+//                                     : [tmp]"=&r"(tmp)
+//                                     : [intr_state]"r"(intr_state)
+//                                     : "memory");
             }
 
             static ALWAYS_INLINE bool AreInterruptsEnabled() {

@@ -1,15 +1,12 @@
 //
 // Created by 甘尧 on 2023/8/21.
 //
+#pragma once
 
-#include <cstdint>
-
-namespace ams::kern::init {
-    void InitializeCorePhase1(uintptr_t misc_unk_debug_phys_addr, void **initial_state);
-}
+#include "base/types.h"
 
 namespace swift::horizon::kernel {
-    void InitForKernel() {
-        ams::kern::init::InitializeCorePhase1(0, nullptr);
-    }
+    constexpr auto kernel_space_size = 4_GB;
+
+    void InitForKernel();
 }

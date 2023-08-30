@@ -5,6 +5,9 @@
 
 namespace swift {
 
+#define CONCAT2(x, y) DO_CONCAT2(x, y)
+#define DO_CONCAT2(x, y) x##y
+
 class DeleteCopyAndMove {
 public:
     DeleteCopyAndMove(const DeleteCopyAndMove&) = delete;
@@ -76,4 +79,4 @@ constexpr bool EndWith(std::string_view str, std::string_view suffix) {
            0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
 }
 
-}  // namespace tapsdk
+}

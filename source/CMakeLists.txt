@@ -51,8 +51,11 @@ else ()
 
 endif()
 
-
 add_subdirectory(externals)
 add_subdirectory(base)
 add_subdirectory(cpu)
 add_subdirectory(kernel)
+if (LINUX OR ANDROID OR APPLE OR WIN32)
+    add_subdirectory(host)
+    add_subdirectory(tests)
+endif ()
