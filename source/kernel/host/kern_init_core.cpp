@@ -264,7 +264,7 @@ namespace ams::kern::init {
         KMemoryLayout::GetVirtualMemoryRegionTree().InsertDirectly(KernelVirtualAddressSpaceBase, KernelVirtualAddressSpaceBase + KernelVirtualAddressSpaceSize - 1);
 
         /* Insert the root region for the physical memory tree, from which all other regions will derive. */
-        KMemoryLayout::GetPhysicalMemoryRegionTree().InsertDirectly(KernelPhysicalAddressSpaceBase, KernelPhysicalAddressSpaceBase + KernelPhysicalAddressSpaceSize - 1);
+//        KMemoryLayout::GetPhysicalMemoryRegionTree().InsertDirectly(KernelPhysicalAddressSpaceBase, KernelPhysicalAddressSpaceBase + KernelPhysicalAddressSpaceSize - 1);
 
         /* Save start and end for ease of use. */
         const uintptr_t code_start_virt_addr = reinterpret_cast<uintptr_t>(_start);
