@@ -7,6 +7,16 @@
 
 namespace ams::kern::arch::host::cpu {
 
+    struct SystemRegisters {
+        u64 ttbr0_el1;
+        u64 ttbr1_el1;
+        u64 tcr_el1;
+        u64 mair_el1;
+        u64 tpidr_el1;
+    };
+
+    static thread_local SystemRegisters sys_regs{};
+
     #define MESOSPHERE_CPU_GET_SYSREG(name)                                            \
         ({                                                                             \
             u64 temp_value;                                                            \

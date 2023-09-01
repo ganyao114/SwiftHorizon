@@ -252,7 +252,7 @@ namespace ams::kern::init {
         g_initial_page_allocator.InitializeFromState(std::addressof(initial_page_allocator_state));
 
         /* Ensure that the T1SZ is correct (and what we expect). */
-        MESOSPHERE_INIT_ABORT_UNLESS((cpu::TranslationControlRegisterAccessor().GetT1Size() / L1BlockSize) == MaxPageTableEntries);
+·//        MESOSPHERE_INIT_ABORT_UNLESS((cpu::TranslationControlRegisterAccessor().GetT1Size() / L1BlockSize) == MaxPageTableEntries);
 
         /* Create page table object for use during initialization. */
         KInitialPageTable init_pt;
@@ -264,7 +264,7 @@ namespace ams::kern::init {
         KMemoryLayout::GetVirtualMemoryRegionTree().InsertDirectly(KernelVirtualAddressSpaceBase, KernelVirtualAddressSpaceBase + KernelVirtualAddressSpaceSize - 1);
 
         /* Insert the root region for the physical memory tree, from which all other regions will derive. */
-//        KMemoryLayout::GetPhysicalMemoryRegionTree().InsertDirectly(KernelPhysicalAddressSpaceBase, KernelPhysicalAddressSpaceBase + KernelPhysicalAddressSpaceSize - 1);
+        KMemoryLayout::GetPhysicalMemoryRegionTree().InsertDirectly(KernelPhysicalAddressSpaceBase, KernelPhysicalAddressSpaceBase + KernelPhysicalAddressSpaceSize - 1);
 
         /* Save start and end for ease of use. */
         const uintptr_t code_start_virt_addr = reinterpret_cast<uintptr_t>(_start);

@@ -17,7 +17,12 @@ namespace swift::horizon::kernel {
 
     static HostMemory host_memory{HostMemory::CreateForKern(kernel_space_size)};
 
+    void InitKernelMemoryLayout() {
+
+    }
+
     void InitForKernel() {
+        InitKernelMemoryLayout();
         init::KInitialPageAllocator::State state{
                 .start_address = reinterpret_cast<uintptr_t>(host_memory.BackingBasePointer()),
                 .end_address = reinterpret_cast<uintptr_t>(host_memory.BackingBasePointer() + host_memory.BackingSize())};

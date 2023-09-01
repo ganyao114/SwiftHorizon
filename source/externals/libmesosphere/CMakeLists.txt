@@ -5,6 +5,7 @@ file(GLOB MESOSPHERE_SVC_SRC source/svc/*.cpp)
 
 if (LINUX OR ANDROID OR APPLE OR WIN32)
     file(GLOB MESOSPHERE_PLATFORM_SRC source/arch/host/*.cpp)
+    set(MESOSPHERE_PLATFORM_SRC ${MESOSPHERE_PLATFORM_SRC} source/board/host/kern_k_memory_layout.cpp)
 else ()
     file(GLOB MESOSPHERE_PLATFORM_SRC source/arch/arm64/*)
 endif()

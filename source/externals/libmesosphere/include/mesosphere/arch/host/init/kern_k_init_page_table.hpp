@@ -85,7 +85,7 @@ namespace ams::kern::arch::host::init {
                 }
             }
         public:
-            static consteval size_t GetMaximumOverheadSize(size_t size) {
+            static size_t GetMaximumOverheadSize(size_t size) {
                 return (util::DivideUp(size, L1BlockSize) + util::DivideUp(size, L2BlockSize)) * PageSize;
             }
         private:
