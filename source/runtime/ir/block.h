@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "instr.h"
+#include "runtime/ir/instr.h"
+#include "runtime/ir/terminal.h"
 
 namespace swift::runtime::ir {
 
@@ -15,6 +16,7 @@ public:
 private:
     IntrusiveListNode list_node;
     IntrusiveList<&Inst::list_node> inst_list;
+    Terminal block_term;
 };
 
 }  // namespace swift::runtime::ir

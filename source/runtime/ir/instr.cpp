@@ -15,6 +15,7 @@ void Inst::SetArg(int index, const Void& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Value& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Imm& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Cond& arg) { arguments[index] = arg; }
+void Inst::SetArg(int index, const Flags& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Uniform& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Lambda& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Operand::Op &arg) { arguments[index] = arg; }

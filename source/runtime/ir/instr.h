@@ -63,6 +63,7 @@ public:
     void SetArg(int index, const Value &arg);
     void SetArg(int index, const Imm &arg);
     void SetArg(int index, const Cond &arg);
+    void SetArg(int index, const Flags &arg);
     void SetArg(int index, const Operand::Op &arg);
     void SetArg(int index, const Uniform &arg);
     void SetArg(int index, const Lambda &arg);
@@ -84,7 +85,7 @@ public:
 private:
     IntrusiveListNode list_node;
     std::array<Arg, max_args> arguments{};
-    u16 num_use{};
+    u32 num_use{};
 };
 
 }

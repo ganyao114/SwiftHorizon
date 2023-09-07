@@ -4,6 +4,11 @@
 
 #pragma once
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpragma-pack"
+#endif
+
 #include "runtime/common/types.h"
 
 namespace swift::runtime::ir {
@@ -11,7 +16,7 @@ namespace swift::runtime::ir {
 class Inst;
 class Arg;
 
-enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Cond, Operand, Lambda };
+enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Cond, Flags, Operand, Lambda };
 enum class ValueType : u8 {
     VOID = 0,
     BOOL,
@@ -29,7 +34,26 @@ enum class ValueType : u8 {
     V256
 };
 
-enum class Cond : u8 { AL = 0 };
+enum class Cond : u8 {
+    EQ = 0,
+    NE,
+    CS,
+    CC,
+    MI,
+    PL,
+    VS,
+    VC,
+    HI,
+    LS,
+    GE,
+    LT,
+    GT,
+    LE,
+    AL,
+    NV,
+    HS = CS,
+    LO = CC,
+};
 
 struct Void {};
 
@@ -64,17 +88,17 @@ private:
     ValueType type{};
 };
 
-// 64K Uniform buffer
+// 4G uniform buffer
 #pragma pack(1)
 class Uniform {
 public:
-    explicit Uniform(u16 offset, ValueType type);
+    explicit Uniform(u32 offset, ValueType type);
 
-    u16 GetOffset();
+    u32 GetOffset();
     ValueType GetType();
 
 private:
-    u16 offset{};
+    u32 offset{};
     ValueType type{};
 };
 
@@ -96,7 +120,22 @@ private:
     FuncAddr address;
 };
 
-enum OperandOp : u8 { Plus = 0, Minus };
+struct Flags {
+    enum Value : u32 {
+        Carry = 1 << 0,
+        Overflow = 1 << 1,
+        Signed = 1 << 2,
+        Zero = 1 << 3,
+        Negate = 1 << 4,
+        All = Carry | Overflow | Signed | Zero | Negate
+    };
+
+    constexpr Flags() : value() {}
+    constexpr Flags(Value flag) : value(flag) {}
+    Value value;
+};
+
+enum class OperandOp : u8 { Plus = 0, Minus, Multi, LSL, LSR };
 
 #pragma pack(1)
 struct ArgClass {
@@ -108,38 +147,44 @@ struct ArgClass {
         OperandOp operand;
         Uniform uniform;
         Lambda lambda;
+        Flags flags;
     } inner{};
 
-    constexpr ArgClass() : type(ArgType::Void) {}
+    explicit ArgClass() : type(ArgType::Void) {}
 
-    constexpr ArgClass(const Value& v) {
+    explicit ArgClass(const Value& v) {
         inner.value = v;
         type = ArgType::Value;
     }
 
-    constexpr ArgClass(const Imm& v) {
+    explicit ArgClass(const Imm& v) {
         inner.imm = v;
         type = ArgType::Imm;
     }
 
-    constexpr ArgClass(const OperandOp& v) {
+    explicit ArgClass(const OperandOp& v) {
         inner.operand = v;
         type = ArgType::Operand;
     }
 
-    constexpr ArgClass(const Uniform& v) {
+    explicit ArgClass(const Uniform& v) {
         inner.uniform = v;
         type = ArgType::Uniform;
     }
 
-    constexpr ArgClass(const Lambda& v) {
+    explicit ArgClass(const Lambda& v) {
         inner.lambda = v;
         type = ArgType::Lambda;
     }
 
-    constexpr ArgClass(const Cond& v) {
+    explicit ArgClass(const Cond& v) {
         inner.cond = v;
         type = ArgType::Cond;
+    }
+
+    explicit ArgClass(const Flags& v) {
+        inner.flags = v;
+        type = ArgType::Flags;
     }
 
     constexpr ArgClass& operator=(const Uniform& v) {
@@ -170,14 +215,14 @@ public:
 
     constexpr Operand() = default;
 
-    explicit Operand(const Value& left, const Imm& right, Op op = Plus);
+    explicit Operand(const Value& left, const Imm& right, Op op = OperandOp::Plus);
 
-    explicit Operand(const Value& left, const Value& right, Op op = Plus);
+    explicit Operand(const Value& left, const Value& right, Op op = OperandOp::Plus);
 
     [[nodiscard]] Op GetOp() const;
 
 private:
-    Op op{Minus};
+    Op op{OperandOp::Minus};
     Type left{};
     Type right{};
 };
@@ -192,6 +237,7 @@ public:
     constexpr Arg(const Value& v) : value(v) {}
     constexpr Arg(const Imm& v) : value(v) {}
     constexpr Arg(const Cond& v) : value(v) {}
+    constexpr Arg(const Flags& v) : value(v) {}
     constexpr Arg(const Operand& v) : value(v.GetOp()) {}
     constexpr Arg(const Operand::Op v) : value(v) {}
     constexpr Arg(const Uniform& v) : value(v) {}
@@ -222,6 +268,9 @@ public:
         } else if constexpr (std::is_same<T, Lambda>::value) {
             assert(value.type == ArgType::Lambda);
             return value.inner.lambda;
+        } else if constexpr (std::is_same<T, Flags>::value) {
+            assert(value.type == ArgType::Flags);
+            return value.inner.flags;
         } else {
             assert(0);
         }

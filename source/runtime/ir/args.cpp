@@ -21,9 +21,9 @@ Operand::Operand(const Value& left, const Value& right, Op op) : left(left), rig
 
 Operand::Op Operand::GetOp() const { return op; }
 
-Uniform::Uniform(u16 offset, ValueType type) : type(type), offset(offset) {}
+Uniform::Uniform(u32 offset, ValueType type) : type(type), offset(offset) {}
 
-u16 Uniform::GetOffset() { return offset; }
+u32 Uniform::GetOffset() { return offset; }
 
 ValueType Uniform::GetType() { return type; }
 
