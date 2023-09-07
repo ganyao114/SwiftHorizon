@@ -18,10 +18,11 @@ concept InstAllocator = requires(T allocator, Inst* inst) {
     { allocator.Delete(inst) };
 };
 
+#pragma pack(1)
 class Inst : public SlabObject<Inst, true> {
     friend class Block;
 public:
-    static constexpr auto max_args = 6;
+    static constexpr auto max_args = 4;
 
     template<typename... Args>
     void SetArgs(const Args&... args) {
@@ -72,8 +73,8 @@ public:
             assert(arguments[index].IsOperand());
             Operand operand{};
             operand.op = arguments[index++].Get<Operand::Op>();
-            std::visit<void>([&](auto left) { operand.left = left; }, arguments[index++].value);
-            std::visit<void>([&](auto right) { operand.right = right; }, arguments[index++].value);
+            operand.left = arguments[index++].value;
+            operand.right = arguments[index++].value;
             return operand;
         } else {
             return arguments[index].Get<T>();

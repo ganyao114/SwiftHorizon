@@ -11,12 +11,29 @@ namespace swift::runtime::ir {
 class Inst;
 class Arg;
 
-enum Type : u8 { VOID = 0, BOOL, U8, U16, U32, U64, U128, U256, V8, V16, V32, V64, V128, V256 };
+enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Cond, Operand, Lambda };
+enum class ValueType : u8 {
+    VOID = 0,
+    BOOL,
+    U8,
+    U16,
+    U32,
+    U64,
+    U128,
+    U256,
+    V8,
+    V16,
+    V32,
+    V64,
+    V128,
+    V256
+};
 
 enum class Cond : u8 { AL = 0 };
 
 struct Void {};
 
+#pragma pack(1)
 class Imm {
 public:
     explicit Imm(bool value);
@@ -26,7 +43,7 @@ public:
     explicit Imm(u64 value);
 
 private:
-    Type type;
+    ValueType type{ValueType::VOID};
 
     union {
         bool imm_bool;
@@ -37,31 +54,43 @@ private:
     } inner{};
 };
 
+#pragma pack(1)
 class Value {
 public:
-    explicit Value(Inst* in);
+    constexpr Value(Inst* in = {}) : inst(in) {}
 
 private:
-    Type type;
-    Inst* inst;
+    Inst* inst{};
+    ValueType type{};
 };
 
 // 64K Uniform buffer
+#pragma pack(1)
 class Uniform {
 public:
-    explicit Uniform(u16 offset, Type type);
+    explicit Uniform(u16 offset, ValueType type);
 
     u16 GetOffset();
-    Type GetType();
+    ValueType GetType();
 
 private:
-    Type type;
-    u16 offset;
+    u16 offset{};
+    ValueType type{};
+};
+
+#pragma pack(1)
+struct DataClass {
+    ArgType type{ArgType::Void};
+    union {
+        Value value;
+        Imm imm;
+        Uniform uniform;
+    } inner{};
 };
 
 class Lambda {
 public:
-    using FuncAddr = std::variant<Value, Imm, Uniform>;
+    using FuncAddr = DataClass;
 
 private:
     FuncAddr address;
@@ -69,13 +98,74 @@ private:
 
 enum OperandOp : u8 { Plus = 0, Minus };
 
-using ArgType = std::variant<Void, Value, Imm, Cond, OperandOp, Uniform, Lambda>;
+#pragma pack(1)
+struct ArgClass {
+    ArgType type;
+    union {
+        Value value;
+        Imm imm;
+        Cond cond;
+        OperandOp operand;
+        Uniform uniform;
+        Lambda lambda;
+    } inner{};
+
+    constexpr ArgClass() : type(ArgType::Void) {}
+
+    constexpr ArgClass(const Value& v) {
+        inner.value = v;
+        type = ArgType::Value;
+    }
+
+    constexpr ArgClass(const Imm& v) {
+        inner.imm = v;
+        type = ArgType::Imm;
+    }
+
+    constexpr ArgClass(const OperandOp& v) {
+        inner.operand = v;
+        type = ArgType::Operand;
+    }
+
+    constexpr ArgClass(const Uniform& v) {
+        inner.uniform = v;
+        type = ArgType::Uniform;
+    }
+
+    constexpr ArgClass(const Lambda& v) {
+        inner.lambda = v;
+        type = ArgType::Lambda;
+    }
+
+    constexpr ArgClass(const Cond& v) {
+        inner.cond = v;
+        type = ArgType::Cond;
+    }
+
+    constexpr ArgClass& operator=(const Uniform& v) {
+        inner.uniform = v;
+        type = ArgType::Uniform;
+        return *this;
+    }
+
+    constexpr ArgClass& operator=(const Lambda& v) {
+        inner.lambda = v;
+        type = ArgType::Lambda;
+        return *this;
+    }
+
+    constexpr ArgClass& operator=(const Imm& v) {
+        inner.imm = v;
+        type = ArgType::Imm;
+        return *this;
+    }
+};
 
 class Operand {
     friend class Inst;
 
 public:
-    using Type = ArgType;
+    using Type = ArgClass;
     using Op = OperandOp;
 
     constexpr Operand() = default;
@@ -88,15 +178,17 @@ public:
 
 private:
     Op op{Minus};
-    Type left{Void{}};
-    Type right{Void{}};
+    Type left{};
+    Type right{};
 };
 
 class Arg {
     friend class Inst;
+
 public:
-    constexpr Arg() : value(Void{}) {}
-    constexpr Arg(const Void& v) : value(v) {}
+    constexpr Arg() : value() {}
+    constexpr Arg(const Void& v) : value() {}
+    constexpr Arg(const ArgClass& v) : value(v) {}
     constexpr Arg(const Value& v) : value(v) {}
     constexpr Arg(const Imm& v) : value(v) {}
     constexpr Arg(const Cond& v) : value(v) {}
@@ -105,21 +197,38 @@ public:
     constexpr Arg(const Uniform& v) : value(v) {}
     constexpr Arg(const Lambda& v) : value(v) {}
 
-    [[nodiscard]] constexpr bool IsImm() const { return std::holds_alternative<Imm>(value); }
+    [[nodiscard]] constexpr bool IsImm() const { return value.type == ArgType::Imm; }
 
-    [[nodiscard]] constexpr bool IsValue() const { return std::holds_alternative<Value>(value); }
+    [[nodiscard]] constexpr bool IsValue() const { return value.type == ArgType::Value; }
 
-    [[nodiscard]] constexpr bool IsOperand() const {
-        return std::holds_alternative<Operand::Op>(value);
-    }
+    [[nodiscard]] constexpr bool IsOperand() const { return value.type == ArgType::Operand; }
 
-    template <typename T>
-    constexpr T &Get() {
-        return std::get<T>(value);
+    template <typename T> constexpr T& Get() {
+        if constexpr (std::is_same<T, Value>::value) {
+            assert(value.type == ArgType::Value);
+            return value.inner.value;
+        } else if constexpr (std::is_same<T, Imm>::value) {
+            assert(value.type == ArgType::Imm);
+            return value.inner.imm;
+        } else if constexpr (std::is_same<T, Uniform>::value) {
+            assert(value.type == ArgType::Uniform);
+            return value.inner.uniform;
+        } else if constexpr (std::is_same<T, Cond>::value) {
+            assert(value.type == ArgType::Cond);
+            return value.inner.cond;
+        } else if constexpr (std::is_same<T, OperandOp>::value) {
+            assert(value.type == ArgType::Operand);
+            return value.inner.operand;
+        } else if constexpr (std::is_same<T, Lambda>::value) {
+            assert(value.type == ArgType::Lambda);
+            return value.inner.lambda;
+        } else {
+            assert(0);
+        }
     }
 
 private:
-    ArgType value;
+    ArgClass value;
 };
 
 }  // namespace swift::runtime::ir

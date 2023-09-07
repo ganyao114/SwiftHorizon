@@ -21,8 +21,8 @@ void Inst::SetArg(int index, const Operand::Op &arg) { arguments[index] = arg; }
 
 void Inst::SetArg(int index, const Operand& arg) {
     arguments[index++] = arg;
-    std::visit<void>([&](auto x) { SetArg(index++, x); }, arg.left);
-    std::visit<void>([&](auto x) { SetArg(index++, x); }, arg.right);
+    arguments[index++] = arg.left;
+    arguments[index++] = arg.right;
 }
 
 }  // namespace swift::runtime::ir
