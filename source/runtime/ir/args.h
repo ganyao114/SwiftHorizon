@@ -16,7 +16,7 @@ namespace swift::runtime::ir {
 class Inst;
 class Arg;
 
-enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Cond, Flags, Operand, Lambda };
+enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Local, Cond, Flags, Operand, Lambda };
 enum class ValueType : u8 {
     VOID = 0,
     BOOL,
@@ -25,7 +25,11 @@ enum class ValueType : u8 {
     U32,
     U64,
     U128,
-    U256,
+    S8,
+    S16,
+    S32,
+    S64,
+    S128,
     V8,
     V16,
     V32,
@@ -88,7 +92,7 @@ private:
     ValueType type{};
 };
 
-// 4G uniform buffer
+// Uniform buffer
 #pragma pack(1)
 class Uniform {
 public:
@@ -99,6 +103,12 @@ public:
 
 private:
     u32 offset{};
+    ValueType type{};
+};
+
+#pragma pack(1)
+struct Local {
+    u16 id{};
     ValueType type{};
 };
 
@@ -131,11 +141,27 @@ struct Flags {
     };
 
     constexpr Flags() : value() {}
-    constexpr Flags(Value flag) : value(flag) {}
+    explicit Flags(Value flag) : value(flag) {}
     Value value;
 };
 
-enum class OperandOp : u8 { Plus = 0, Minus, Multi, LSL, LSR };
+#pragma pack(1)
+struct OperandOp {
+    enum Type : u8 {
+        Plus    = 1 << 0,
+        Minus   = 1 << 1,
+        LSL     = 1 << 2,
+        LSR     = 1 << 3,
+        EXT     = 1 << 4,
+    };
+
+    constexpr OperandOp() = default;
+
+    explicit OperandOp(Type type, u8 shift_ext = 0) : type(type), shift_ext(shift_ext) {}
+
+    Type type{Plus};
+    u8 shift_ext{};
+};
 
 #pragma pack(1)
 struct ArgClass {
@@ -145,6 +171,7 @@ struct ArgClass {
         Imm imm;
         Cond cond;
         OperandOp operand;
+        Local local;
         Uniform uniform;
         Lambda lambda;
         Flags flags;
@@ -165,6 +192,11 @@ struct ArgClass {
     explicit ArgClass(const OperandOp& v) {
         inner.operand = v;
         type = ArgType::Operand;
+    }
+
+    explicit ArgClass(const Local& v) {
+        inner.local = v;
+        type = ArgType::Local;
     }
 
     explicit ArgClass(const Uniform& v) {
@@ -215,14 +247,14 @@ public:
 
     constexpr Operand() = default;
 
-    explicit Operand(const Value& left, const Imm& right, Op op = OperandOp::Plus);
+    explicit Operand(const Value& left, const Imm& right, Op op = {});
 
-    explicit Operand(const Value& left, const Value& right, Op op = OperandOp::Plus);
+    explicit Operand(const Value& left, const Value& right, Op op = {});
 
     [[nodiscard]] Op GetOp() const;
 
 private:
-    Op op{OperandOp::Minus};
+    Op op{};
     Type left{};
     Type right{};
 };
@@ -240,6 +272,7 @@ public:
     constexpr Arg(const Flags& v) : value(v) {}
     constexpr Arg(const Operand& v) : value(v.GetOp()) {}
     constexpr Arg(const Operand::Op v) : value(v) {}
+    constexpr Arg(const Local& v) : value(v) {}
     constexpr Arg(const Uniform& v) : value(v) {}
     constexpr Arg(const Lambda& v) : value(v) {}
 
@@ -256,6 +289,9 @@ public:
         } else if constexpr (std::is_same<T, Imm>::value) {
             assert(value.type == ArgType::Imm);
             return value.inner.imm;
+        } else if constexpr (std::is_same<T, Local>::value) {
+            assert(value.type == ArgType::Local);
+            return value.inner.local;
         } else if constexpr (std::is_same<T, Uniform>::value) {
             assert(value.type == ArgType::Uniform);
             return value.inner.uniform;

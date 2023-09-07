@@ -22,7 +22,7 @@ concept InstAllocator = requires(T allocator, Inst* inst) {
 class Inst : public SlabObject<Inst, true> {
     friend class Block;
 public:
-    static constexpr auto max_args = 4;
+    static constexpr auto max_args = 5;
 
     template<typename... Args>
     void SetArgs(const Args&... args) {
@@ -65,6 +65,7 @@ public:
     void SetArg(int index, const Cond &arg);
     void SetArg(int index, const Flags &arg);
     void SetArg(int index, const Operand::Op &arg);
+    void SetArg(int index, const Local &arg);
     void SetArg(int index, const Uniform &arg);
     void SetArg(int index, const Lambda &arg);
     void SetArg(int index, const Operand &arg);
@@ -85,7 +86,7 @@ public:
 private:
     IntrusiveListNode list_node;
     std::array<Arg, max_args> arguments{};
-    u32 num_use{};
+    u16 num_use{};
 };
 
 }

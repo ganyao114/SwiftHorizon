@@ -16,7 +16,11 @@ add_library(runtime STATIC
         backend/interpreter.h
         backend/context.h
         ir/terminal.cpp
-        ir/terminal.h)
+        ir/terminal.h
+        ir/module.cpp
+        ir/module.h
+        ir/fucntion.cpp
+        ir/fucntion.h)
 
 find_package(Boost 1.57 REQUIRED)
 target_link_libraries(runtime PUBLIC base vapours Boost::boost)
