@@ -13,6 +13,10 @@ class Block : public SlabObject<Block, true> {
 public:
     Block() = default;
 
+    Terminal GetTerminal() const;
+    void SetTerm(Terminal term);
+    bool HasTerminal() const;
+
 private:
     IntrusiveListNode list_node;
     IntrusiveList<&Inst::list_node> inst_list;

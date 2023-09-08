@@ -32,8 +32,8 @@ INST2(MulImm, Value, Value, Imm)
 INST2(MulValue, Value, Value, Value)
 INST2(DivImm, Value, Value, Imm)
 INST2(DivValue, Value, Value, Value)
-INST2(ZeroExtend, Value, Value, Size)
-INST2(SignExtend, Value, Value, Size)
+INST2(ZeroExtend, Value, Value, Imm)
+INST2(SignExtend, Value, Value, Imm)
 // And & Or
 INST2(AndImm, Value, Value, Imm)
 INST2(OrImm, Value, Value, Imm)
@@ -45,8 +45,9 @@ INST1(GetCarry, Value, Value)
 INST1(GetOverFlow, Value, Value)
 INST1(GetSigned, Value, Value)
 INST1(GetZero, Value, Value)
-// Other flags
-INST2(GetFlag, Value, Value, Flags)
+INST1(GetNegate, Value, Value)
+INST1(GetNegZero, Value, Value)
+INST1(GetNZCV, Value, Value)
 // Shift
 // LogicalShiftLeft
 INST2(Lsl, Value, Value, Imm)
@@ -61,4 +62,5 @@ INST3(BitExtract, Value, Value, Imm, Imm)
 INST4(BitInsert, Value, Value, Value, Imm, Imm)
 INST3(BitClear, Value, Value, Imm, Imm)
 INST2(TestBit, Value, Value, Imm)
+
 

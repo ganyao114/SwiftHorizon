@@ -87,6 +87,10 @@ class Value {
 public:
     constexpr Value(Inst* in = {}) : inst(in) {}
 
+    Inst *Def() const {
+        return inst;
+    }
+
 private:
     Inst* inst{};
     ValueType type{};
