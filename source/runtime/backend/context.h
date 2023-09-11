@@ -18,14 +18,19 @@ struct RSBFrame {
 
 struct Context {
     ir::Location current_loc{0};
-    void *l1_code_cache{};
-    void *l2_code_cache{};
-    void *pt{};
-    void *uniform_buffer{};
+    void* pt{};
+    void* local_buffer{};
+    void* uniform_buffer{};
+};
+
+struct State {
+    void* l1_code_cache{};
+    void* l2_code_cache{};
+    void* interface{};
     volatile u32 halt_reason{0};
 
-    void *rsb_pointer = reinterpret_cast<void *>(rsb_frame.data());
+    void* rsb_pointer = reinterpret_cast<void*>(rsb_frame.data());
     std::array<RSBFrame, rsb_stack_size + 2> rsb_frame{};
 };
 
-}
+}  // namespace swift::runtime::backend

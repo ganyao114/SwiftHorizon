@@ -83,4 +83,35 @@ Inst* Inst::GetPseudoOperation(OpCode code) {
     return {};
 }
 
+void Inst::Validate(Inst* inst) {
+    assert(inst);
+    assert(inst->op_code >= OpCode::Void && inst->op_code < OpCode::COUNT);
+    if (inst->op_code > OpCode::Void && inst->op_code < OpCode::BASE_COUNT) {
+        auto &ir_info = GetIRMetaInfo(inst->op_code);
+        int inner_arg_index{};
+        int arg_index{};
+        while (inner_arg_index < Inst::max_args) {
+            auto &inst_arg = inst->ArgAt(inner_arg_index);
+            auto arg_type = ir_info.arg_types[arg_index];
+            assert(inst_arg.GetType() == arg_type);
+            arg_index++;
+            if (arg_type == ArgType::Operand) {
+                inner_arg_index += 3;
+            } else {
+                inner_arg_index++;
+            }
+        }
+    } else {
+        switch (inst->op_code) {
+            case OpCode::SetLocation: {
+                assert(inst->ArgAt(0).GetType() == ArgType::Imm);
+                break;
+            }
+            default:
+                abort();
+                break;
+        }
+    }
+}
+
 }  // namespace swift::runtime::ir

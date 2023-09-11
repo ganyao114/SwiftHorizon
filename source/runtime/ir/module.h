@@ -2,7 +2,6 @@
 // Created by mac on 2023/9/7.
 //
 
-#ifndef SWIFTHORIZON_MODULE_H
-#define SWIFTHORIZON_MODULE_H
+#pragma once
 
-#endif //SWIFTHORIZON_MODULE_H
+#include "runtime/ir/block.h"

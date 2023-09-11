@@ -1,5 +1,10 @@
 //
-// Created by 甘尧 on 2023/9/7.
+// Created by mac on 2023/9/7.
 //
 
 #include "function.h"
+
+namespace swift::runtime::ir {
+
+}
+

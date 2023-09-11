@@ -5,6 +5,8 @@ INST1(LoadUniform, Value, Uniform)
 INST2(StoreUniform, Void, Uniform, Value)
 INST1(LoadMemory, Value, Operand)
 INST2(StoreMemory, Void, Operand, Value)
+INST1(LoadMemoryTSO, Value, Operand)
+INST2(StoreMemoryTSO, Void, Operand, Value)
 INST3(CompareAndSwap, Value, Operand, Value, Value)
 
 // Help

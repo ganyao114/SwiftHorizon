@@ -5,15 +5,28 @@
 #include "args.h"
 
 namespace swift::runtime::ir {
-Imm::Imm(bool value) : type{ValueType::BOOL} { inner.imm_bool = value; }
 
-Imm::Imm(u8 value) : type{ValueType::U8} { inner.imm_u8 = value; }
+Lambda::Lambda() { address.type = ArgType::Void; }
 
-Imm::Imm(u16 value) : type{ValueType::U16} { inner.imm_u16 = value; }
+Lambda::Lambda(const Imm& imm) {
+    address.inner.imm = imm;
+    address.type = ArgType::Imm;
+}
 
-Imm::Imm(u32 value) : type{ValueType::U32} { inner.imm_u32 = value; }
+Lambda::Lambda(const Value& value) {
+    address.inner.value = value;
+    address.type = ArgType::Value;
+}
 
-Imm::Imm(u64 value) : type{ValueType::U64} { inner.imm_u64 = value; }
+Imm& Lambda::GetImm() {
+    assert(address.type == ArgType::Imm);
+    return address.inner.imm;
+}
+
+Value& Lambda::GetValue() {
+    assert(address.type == ArgType::Value);
+    return address.inner.value;
+}
 
 Operand::Operand(const Value& left, const Imm& right, Op op) : left(left), right(right), op(op) {}
 

@@ -28,6 +28,7 @@ enum class OpCode : u8 {
 #undef INST2
 #undef INST3
 #undef INST4
+    BASE_COUNT,
     SetLocation,
     COUNT
 };
@@ -50,7 +51,6 @@ concept InstAllocator = requires(T allocator, Inst* inst, OpCode code) {
 #pragma pack(1)
 class Inst : public SlabObject<Inst, true> {
     friend class Block;
-
 public:
     static constexpr auto max_args = 5;
 
@@ -82,6 +82,7 @@ public:
         inst->SetArgs(args...);
         return inst;
     }
+    static void Validate(Inst* inst);
 
     explicit Inst() = default;
 
@@ -120,12 +121,14 @@ public:
 
     Inst* GetPseudoOperation(OpCode code);
 
-private:
     IntrusiveListNode list_node{};
+private:
     Inst* next_pseudo_inst{};
     std::array<Arg, max_args> arguments{};
     OpCode op_code{OpCode::Void};
     u8 num_use{};
 };
+
+using InstList = IntrusiveList<&Inst::list_node>;
 
 }  // namespace swift::runtime::ir

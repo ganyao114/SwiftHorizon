@@ -30,7 +30,7 @@ struct LinkBlockFast {
 struct PopRSBHint {};
 
 struct If;
-struct CheckBit;
+struct Switch;
 struct CheckHalt;
 
 using Terminal = boost::variant<
@@ -40,22 +40,27 @@ using Terminal = boost::variant<
         LinkBlockFast,
         PopRSBHint,
         boost::recursive_wrapper<If>,
-        boost::recursive_wrapper<CheckBit>,
+        boost::recursive_wrapper<Switch>,
         boost::recursive_wrapper<CheckHalt>>;
 
 struct If {
-    If(Cond if_, Terminal then_, Terminal else_)
-            : if_(if_), then_(std::move(then_)), else_(std::move(else_)) {}
-    Cond if_;
+    If(Value cond, Terminal then_, Terminal else_)
+            : cond(cond), then_(std::move(then_)), else_(std::move(else_)) {}
+    Value cond;
     Terminal then_;
     Terminal else_;
 };
 
-struct CheckBit {
-    CheckBit(Terminal then_, Terminal else_)
-            : then_(std::move(then_)), else_(std::move(else_)) {}
-    Terminal then_;
-    Terminal else_;
+struct Switch {
+    struct Case {
+        Imm case_value;
+        Terminal then;
+    };
+
+    Switch(Value value, const std::span<Case> &cases)
+            : value(value), cases(cases) {}
+    Value value;
+    std::span<Case> cases;
 };
 
 struct CheckHalt {

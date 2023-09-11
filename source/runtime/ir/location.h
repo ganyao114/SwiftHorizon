@@ -26,6 +26,10 @@ inline bool operator<(const Location& x, const Location& y) noexcept {
     return x.Value() < y.Value();
 }
 
+inline bool operator>(const Location& x, const Location& y) noexcept {
+    return x.Value() > y.Value();
+}
+
 std::string ToString(const Location& descriptor);
 
 }  // namespace swift::runtime::ir

@@ -7,6 +7,7 @@
 #include "base/types.h"
 #include "vapours.hpp"
 #include <boost/intrusive/slist.hpp>
+#include <boost/intrusive/rbtree.hpp>
 
 namespace swift::runtime {
 
@@ -15,7 +16,11 @@ using IntrusiveList = typename ams::util::IntrusiveListMemberTraits<NodeMember>:
 using IntrusiveListNode = ams::util::IntrusiveListNode;
 
 using SingleIntrusiveListNode = boost::intrusive::slist_member_hook<>;
-template<class Parent, SingleIntrusiveListNode Parent::*Member>
+template<auto Member, typename Parent = ams::util::impl::GetParentType<Member>>
 using SingleIntrusiveList = typename boost::intrusive::slist<Parent, boost::intrusive::member_hook<Parent, SingleIntrusiveListNode, Member>>;
+
+using IntrusiveMapNode = boost::intrusive::set_member_hook<>;
+template<auto Member, typename Parent = ams::util::impl::GetParentType<Member>>
+using IntrusiveMap = typename boost::intrusive::rbtree<Parent, boost::intrusive::member_hook<Parent, IntrusiveMapNode, Member>, boost::intrusive::compare<std::less<Parent>>>;
 
 }

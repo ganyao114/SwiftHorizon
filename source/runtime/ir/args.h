@@ -59,16 +59,18 @@ enum class Cond : u8 {
     LO = CC,
 };
 
-struct Void {};
+struct Void {
+    explicit Void(Inst*) {}
+};
 
 #pragma pack(1)
 class Imm {
 public:
-    explicit Imm(bool value);
-    explicit Imm(u8 value);
-    explicit Imm(u16 value);
-    explicit Imm(u32 value);
-    explicit Imm(u64 value);
+    constexpr Imm(bool value) : type{ValueType::BOOL}, imm_bool{value} {}
+    constexpr Imm(u8 value) : type{ValueType::U8}, imm_u8{value} {}
+    constexpr Imm(u16 value) : type{ValueType::U16}, imm_u16{value} {}
+    constexpr Imm(u32 value) : type{ValueType::U32}, imm_u32{value} {}
+    constexpr Imm(u64 value) : type{ValueType::U64}, imm_u64{value} {}
 
 private:
     ValueType type{ValueType::VOID};
@@ -79,7 +81,7 @@ private:
         u16 imm_u16;
         u32 imm_u32;
         u64 imm_u64;
-    } inner{};
+    };
 };
 
 #pragma pack(1)
@@ -112,7 +114,7 @@ private:
 
 #pragma pack(1)
 struct Local {
-    u16 id{};
+    u32 id{};
     ValueType type{};
 };
 
@@ -122,13 +124,21 @@ struct DataClass {
     union {
         Value value;
         Imm imm;
-        Uniform uniform;
     } inner{};
 };
 
 class Lambda {
 public:
     using FuncAddr = DataClass;
+
+    explicit Lambda();
+    explicit Lambda(const Value &value);
+    explicit Lambda(const Imm &imm);
+
+    bool IsValue();
+
+    Value &GetValue();
+    Imm &GetImm();
 
 private:
     FuncAddr address;
@@ -285,6 +295,12 @@ public:
     [[nodiscard]] constexpr bool IsValue() const { return value.type == ArgType::Value; }
 
     [[nodiscard]] constexpr bool IsOperand() const { return value.type == ArgType::Operand; }
+
+    [[nodiscard]] constexpr bool IsLambda() const { return value.type == ArgType::Operand; }
+
+    [[nodiscard]] ArgType GetType() const {
+        return value.type;
+    }
 
     template <typename T> constexpr T& Get() {
         if constexpr (std::is_same<T, Value>::value) {
