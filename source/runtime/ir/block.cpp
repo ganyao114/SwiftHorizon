@@ -6,7 +6,7 @@
 
 namespace swift::runtime::ir {
 Terminal Block::GetTerminal() const { return block_term; }
-void Block::SetTerm(Terminal term) { block_term = std::move(term); }
+void Block::SetTerminal(Terminal term) { block_term = std::move(term); }
 bool Block::HasTerminal() const { return !block_term.empty(); }
 
 void Block::AppendInst(Inst* inst) {

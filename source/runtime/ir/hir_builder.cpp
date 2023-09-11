@@ -51,4 +51,16 @@ void HIRFunction::MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right) {
 
 }
 
+void HIRBuilder::If(const terminal::If& if_) {
+
+}
+
+void HIRBuilder::Switch(const terminal::Switch& switch_) {
+
+}
+
+void HIRBuilder::LinkBlock(const terminal::LinkBlock& switch_) {
+
+}
+
 }  // namespace swift::runtime::ir

@@ -45,11 +45,12 @@ INST2(XorValue, Value, Value, Value)
 // Get flag from result
 INST1(GetCarry, Value, Value)
 INST1(GetOverFlow, Value, Value)
-INST1(GetSigned, Value, Value)
 INST1(GetZero, Value, Value)
 INST1(GetNegate, Value, Value)
 INST1(GetNegZero, Value, Value)
+INST1(GetParity, Value, Value)
 INST1(GetNZCV, Value, Value)
+INST1(GetAllFlags, Value, Value)
 // Shift
 // LogicalShiftLeft
 INST2(Lsl, Value, Value, Imm)

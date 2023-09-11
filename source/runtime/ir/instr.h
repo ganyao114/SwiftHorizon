@@ -123,6 +123,7 @@ public:
 
     IntrusiveListNode list_node{};
 private:
+
     Inst* next_pseudo_inst{};
     std::array<Arg, max_args> arguments{};
     OpCode op_code{OpCode::Void};

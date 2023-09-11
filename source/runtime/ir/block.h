@@ -19,23 +19,36 @@ public:
     explicit Block(u32 id, Location location) : id(id), location(location) {}
 
     [[nodiscard]] Terminal GetTerminal() const;
-    void SetTerm(Terminal term);
+    void SetTerminal(Terminal term);
     [[nodiscard]] bool HasTerminal() const;
 
-    template <typename... Args> Inst *AppendInst(OpCode op, const Args&... args) {
+    template <typename... Args> Inst* AppendInst(OpCode op, const Args&... args) {
         auto inst = new Inst(op);
         inst->SetArgs(args...);
         AppendInst(inst);
         return inst;
     }
 
-    void AppendInst(Inst *inst);
+    void AppendInst(Inst* inst);
 
-#define INST0(name, ret, ...) ret name(){ return ret{AppendInst(OpCode::name)}; }
-#define INST1(name, ret, ...) template <typename... Args> ret name(const Args&... args){ return ret{AppendInst(OpCode::name, args...)}; }
-#define INST2(name, ret, ...) template <typename... Args> ret name(const Args&... args){ return ret{AppendInst(OpCode::name, args...)}; }
-#define INST3(name, ret, ...) template <typename... Args> ret name(const Args&... args){ return ret{AppendInst(OpCode::name, args...)}; }
-#define INST4(name, ret, ...) template <typename... Args> ret name(const Args&... args){ return ret{AppendInst(OpCode::name, args...)}; }
+#define INST0(name, ret, ...)                                                                      \
+    ret name() { return ret{AppendInst(OpCode::name)}; }
+#define INST1(name, ret, ...)                                                                      \
+    template <typename... Args> ret name(const Args&... args) {                                    \
+        return ret{AppendInst(OpCode::name, args...)};                                             \
+    }
+#define INST2(name, ret, ...)                                                                      \
+    template <typename... Args> ret name(const Args&... args) {                                    \
+        return ret{AppendInst(OpCode::name, args...)};                                             \
+    }
+#define INST3(name, ret, ...)                                                                      \
+    template <typename... Args> ret name(const Args&... args) {                                    \
+        return ret{AppendInst(OpCode::name, args...)};                                             \
+    }
+#define INST4(name, ret, ...)                                                                      \
+    template <typename... Args> ret name(const Args&... args) {                                    \
+        return ret{AppendInst(OpCode::name, args...)};                                             \
+    }
 #include "ir.inc"
 #undef INST0
 #undef INST1
@@ -43,17 +56,11 @@ public:
 #undef INST3
 #undef INST4
 
-    bool operator<(const Block &rhs) const {
-        return location < rhs.location;
-    }
+    bool operator<(const Block& rhs) const { return location < rhs.location; }
 
-    bool operator>(const Block &rhs) const {
-        return location > rhs.location;
-    }
+    bool operator>(const Block& rhs) const { return location > rhs.location; }
 
-    bool operator==(const Block &rhs) const {
-        return location == rhs.location;
-    }
+    bool operator==(const Block& rhs) const { return location == rhs.location; }
 
     union {
         IntrusiveMapNode map_node{};

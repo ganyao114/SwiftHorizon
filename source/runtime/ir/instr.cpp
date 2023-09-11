@@ -14,19 +14,36 @@ Arg& Inst::ArgAt(int index) { return arguments[index]; }
 
 void Inst::SetArg(int index, const Void& arg) { arguments[index] = arg; }
 
-void Inst::SetArg(int index, const Value& arg) { arguments[index] = arg; }
+void Inst::SetArg(int index, const Value& arg) {
+    arguments[index] = arg;
+    Use(arg);
+}
+
 void Inst::SetArg(int index, const Imm& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Cond& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Flags& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Local& arg) { arguments[index] = arg; }
 void Inst::SetArg(int index, const Uniform& arg) { arguments[index] = arg; }
-void Inst::SetArg(int index, const Lambda& arg) { arguments[index] = arg; }
+
+void Inst::SetArg(int index, const Lambda& arg) {
+    arguments[index] = arg;
+    if (arg.IsValue()) {
+        Use(arg.GetValue());
+    }
+}
+
 void Inst::SetArg(int index, const Operand::Op& arg) { arguments[index] = arg; }
 
 void Inst::SetArg(int index, const Operand& arg) {
     arguments[index++] = arg;
     arguments[index++] = arg.left;
     arguments[index++] = arg.right;
+    if (arg.left.type == ArgType::Value) {
+        Use(arg.left.inner.value);
+    }
+    if (arg.right.type == ArgType::Value) {
+        Use(arg.right.inner.value);
+    }
 }
 
 void Inst::Use(const Value& value) {
@@ -60,11 +77,11 @@ bool Inst::IsPseudoOperation() {
     switch (op_code) {
         case OpCode::GetCarry:
         case OpCode::GetOverFlow:
-        case OpCode::GetSigned:
         case OpCode::GetNegate:
         case OpCode::GetZero:
         case OpCode::GetNZCV:
         case OpCode::GetNegZero:
+        case OpCode::GetAllFlags:
             return true;
         default:
             return false;

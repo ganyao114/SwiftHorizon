@@ -28,6 +28,13 @@ Value& Lambda::GetValue() {
     return address.inner.value;
 }
 
+Value& Lambda::GetValue() const {
+    assert(address.type == ArgType::Value);
+    return address.inner.value;
+}
+
+bool Lambda::IsValue() const { return address.type == ArgType::Value; }
+
 Operand::Operand(const Value& left, const Imm& right, Op op) : left(left), right(right), op(op) {}
 
 Operand::Operand(const Value& left, const Value& right, Op op) : left(left), right(right), op(op) {}

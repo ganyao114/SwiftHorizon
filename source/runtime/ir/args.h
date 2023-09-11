@@ -9,6 +9,7 @@
 #pragma clang diagnostic ignored "-Wpragma-pack"
 #endif
 
+#include "runtime/common/common_funcs.h"
 #include "runtime/common/types.h"
 
 namespace swift::runtime::ir {
@@ -89,9 +90,7 @@ class Value {
 public:
     constexpr Value(Inst* in = {}) : inst(in) {}
 
-    Inst *Def() const {
-        return inst;
-    }
+    Inst* Def() const { return inst; }
 
 private:
     Inst* inst{};
@@ -132,41 +131,40 @@ public:
     using FuncAddr = DataClass;
 
     explicit Lambda();
-    explicit Lambda(const Value &value);
-    explicit Lambda(const Imm &imm);
+    explicit Lambda(const Value& value);
+    explicit Lambda(const Imm& imm);
 
-    bool IsValue();
+    bool IsValue() const;
 
-    Value &GetValue();
-    Imm &GetImm();
+    Value& GetValue();
+    Value& GetValue() const;
+    Imm& GetImm();
 
 private:
-    FuncAddr address;
+    mutable FuncAddr address;
 };
 
-struct Flags {
-    enum Value : u32 {
-        Carry = 1 << 0,
-        Overflow = 1 << 1,
-        Signed = 1 << 2,
-        Zero = 1 << 3,
-        Negate = 1 << 4,
-        All = Carry | Overflow | Signed | Zero | Negate
-    };
-
-    constexpr Flags() : value() {}
-    explicit Flags(Value flag) : value(flag) {}
-    Value value;
+enum class Flags : u16 {
+    Carry = 1 << 0,
+    Overflow = 1 << 1,
+    Zero = 1 << 2,
+    Negate = 1 << 3,
+    Parity = 1 << 4,
+    NegZero = Zero | Negate,
+    NZCV = Carry | Overflow | Zero | Negate,
+    All = Carry | Overflow | Zero | Negate | Parity
 };
+
+DECLARE_ENUM_FLAG_OPERATORS(Flags)
 
 #pragma pack(1)
 struct OperandOp {
     enum Type : u8 {
-        Plus    = 1 << 0,
-        Minus   = 1 << 1,
-        LSL     = 1 << 2,
-        LSR     = 1 << 3,
-        EXT     = 1 << 4,
+        Plus = 1 << 0,
+        Minus = 1 << 1,
+        LSL = 1 << 2,
+        LSR = 1 << 3,
+        EXT = 1 << 4,
     };
 
     constexpr OperandOp() = default;
@@ -298,9 +296,7 @@ public:
 
     [[nodiscard]] constexpr bool IsLambda() const { return value.type == ArgType::Operand; }
 
-    [[nodiscard]] ArgType GetType() const {
-        return value.type;
-    }
+    [[nodiscard]] ArgType GetType() const { return value.type; }
 
     template <typename T> constexpr T& Get() {
         if constexpr (std::is_same<T, Value>::value) {
