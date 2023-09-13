@@ -36,7 +36,7 @@ namespace ams::util {
         public:
             using RBEntry = freebsd::RBEntry<IntrusiveRedBlackTreeNode>;
         private:
-            RBEntry m_entry;
+            RBEntry m_entry{};
         public:
             constexpr explicit ALWAYS_INLINE IntrusiveRedBlackTreeNode(util::ConstantInitializeTag) : m_entry(util::ConstantInitialize) { /* ... */ }
             explicit ALWAYS_INLINE IntrusiveRedBlackTreeNode() { /* ... */ }

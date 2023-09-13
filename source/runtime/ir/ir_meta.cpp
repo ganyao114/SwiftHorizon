@@ -18,22 +18,18 @@ constexpr ArgType Operand = ArgType::Operand;
 constexpr ArgType Lambda = ArgType::Lambda;
 
 static const std::array ir_meta_infos {
-#define INST0(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
-#define INST1(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
-#define INST2(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
-#define INST3(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
-#define INST4(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
+IRMeta{OpCode::Void, "Void", Void, {}},
+#define INST(name, ret, ...) IRMeta{OpCode::name, #name, ret, {__VA_ARGS__}},
 #include "ir.inc"
-#undef INST0
-#undef INST1
-#undef INST2
-#undef INST3
-#undef INST4
+#undef INST
+IRMeta{OpCode::BASE_COUNT, "BASE_COUNT", Void, {}},
+IRMeta{OpCode::SetLocation, "SetLocation", Void, {Imm}},
+IRMeta{OpCode::COUNT, "COUNT", Void, {}}
 };
 
 const IRMeta &GetIRMetaInfo(OpCode op_code) {
-    assert(op_code != OpCode::Void);
-    return ir_meta_infos[static_cast<u8>(op_code) - 1];
+    ASSERT(op_code < OpCode::COUNT);
+    return ir_meta_infos[static_cast<u8>(op_code)];
 }
 
 }

@@ -13,6 +13,26 @@ namespace swift::runtime::ir {
 class HIRBlock;
 class HIRFunction;
 
+struct HostGPR {
+    static constexpr auto INVALID = u16(-1);
+    u16 id{INVALID};
+};
+
+struct HostFPR {
+    static constexpr auto INVALID = u16(-1);
+    u16 id{INVALID};
+};
+
+struct SpillSlot {
+    static constexpr auto INVALID = u16(-1);
+    u16 offset{INVALID};
+};
+
+class DataContext {
+public:
+    virtual u16 MaxValueCount() = 0;
+};
+
 class Edge {
 public:
     enum Flags : u8 {
@@ -31,7 +51,43 @@ public:
     u8 flags{};
 };
 
-class HIRBlock {
+#pragma pack(push, 1)
+struct ValueAllocated {
+    enum Type : u8 {
+        NONE,
+        GPR,
+        FPR,
+        MEM
+    };
+    Type type;
+    union {
+        HostGPR host_gpr;
+        HostFPR host_fpr;
+        SpillSlot spill_slot;
+    };
+
+    [[nodiscard]] bool Allocated() const {
+        return type != NONE;
+    }
+
+    explicit ValueAllocated() : type(NONE) {}
+};
+#pragma pack(pop)
+
+#pragma pack(push, 4)
+struct HIRValue {
+    Value value;
+    HIRBlock *block;
+    IntrusiveListNode list_node{};
+    ValueAllocated allocated{};
+
+    explicit HIRValue(u16 id, const Value& value, HIRBlock* block);
+};
+#pragma pack(pop, 4)
+
+using HIRValueList = IntrusiveList<&HIRValue::list_node>;
+
+class HIRBlock : public DataContext {
     friend class HIRFunction;
 
 public:
@@ -46,9 +102,12 @@ public:
 
     auto& GetOutgoingEdges() { return outgoing_edges; }
 
+    u16 MaxValueCount() override;
+
     IntrusiveListNode list_node;
 
 private:
+    u16 order_id{};
     Block* block;
     IntrusiveList<&Edge::outgoing_edges> outgoing_edges;
     IntrusiveList<&Edge::incoming_edges> incoming_edges;
@@ -61,13 +120,18 @@ public:
     explicit HIRFunction(const Location& begin,
                          const Location& end,
                          ObjectPool<HIRBlock>& block_pool,
-                         ObjectPool<Edge>& edge_pool);
+                         ObjectPool<Edge>& edge_pool,
+                         ObjectPool<HIRValue>& value_pool);
 
     template <typename... Args> Inst* AppendInst(OpCode op, const Args&... args) {
-        assert(current_block);
+        ASSERT(current_block);
         auto inst = new Inst(op);
         inst->SetArgs(args...);
         current_block->block->AppendInst(inst);
+        if (inst->HasValue()) {
+            auto hir_value = hir_value_pool.Create(value_order_id++, Value{inst}, current_block);
+            values.push_back(*hir_value);
+        }
         return inst;
     }
 
@@ -75,42 +139,41 @@ public:
     void AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional = false);
     void RemoveEdge(Edge* edge);
     void MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right);
+    bool SplitBlock(HIRBlock *new_block, HIRBlock *old_block);
+
+    void EndBlock(Terminal terminal);
 
 private:
+
+    struct {
+        u32 current_slot{0};
+    } spill_stack{};
+
     Location begin;
     Location end;
+    u16 block_order_id{};
+    u16 value_order_id{};
     ObjectPool<Edge>& hir_edge_pool;
     ObjectPool<HIRBlock>& hir_block_pool;
+    ObjectPool<HIRValue>& hir_value_pool;
     HIRBlockList blocks{};
+    HIRValueList values{};
     HIRBlock* current_block{};
 };
 
 class HIRBuilder {
 public:
-#define INST0(name, ret, ...)                                                                      \
-    ret name() { return ret{current_function->AppendInst(OpCode::name)}; }
-#define INST1(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{current_function->AppendInst(OpCode::name, args...)};                           \
-    }
-#define INST2(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{current_function->AppendInst(OpCode::name, args...)};                           \
-    }
-#define INST3(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{current_function->AppendInst(OpCode::name, args...)};                           \
-    }
-#define INST4(name, ret, ...)                                                                      \
+
+    explicit HIRBuilder(u32 func_cap = 1);
+
+#define INST(name, ret, ...)                                                                      \
     template <typename... Args> ret name(const Args&... args) {                                    \
         return ret{current_function->AppendInst(OpCode::name, args...)};                           \
     }
 #include "ir.inc"
-#undef INST0
-#undef INST1
-#undef INST2
-#undef INST3
-#undef INST4
+#undef INST
+
+    void SetLocation(const Location &location);
 
     void If(const terminal::If& if_);
 
@@ -119,8 +182,11 @@ public:
     void LinkBlock(const terminal::LinkBlock& switch_);
 
 private:
-    ObjectPool<Edge> hir_edge_pool;
+    // temp objects
+    ObjectPool<HIRFunction> hir_function_pool;
     ObjectPool<HIRBlock> hir_block_pool;
+    ObjectPool<Edge> hir_edge_pool;
+    ObjectPool<HIRValue> hir_value_pool;
     HIRFunction* current_function{};
 };
 

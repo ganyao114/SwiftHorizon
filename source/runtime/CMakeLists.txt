@@ -15,6 +15,9 @@ add_library(runtime STATIC
         common/slab_alloc.h
         common/object_pool.h
         common/common_funcs.h
+        common/variant_util.h
+        common/logging.h
+        common/logging.cpp
         ir/args.cpp
         ir/args.h
         ir/location.cpp

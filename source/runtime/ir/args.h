@@ -67,11 +67,11 @@ struct Void {
 #pragma pack(1)
 class Imm {
 public:
-    constexpr Imm(bool value) : type{ValueType::BOOL}, imm_bool{value} {}
-    constexpr Imm(u8 value) : type{ValueType::U8}, imm_u8{value} {}
-    constexpr Imm(u16 value) : type{ValueType::U16}, imm_u16{value} {}
-    constexpr Imm(u32 value) : type{ValueType::U32}, imm_u32{value} {}
-    constexpr Imm(u64 value) : type{ValueType::U64}, imm_u64{value} {}
+    explicit Imm(bool value) : type{ValueType::BOOL}, imm_bool{value} {}
+    explicit Imm(u8 value) : type{ValueType::U8}, imm_u8{value} {}
+    explicit Imm(u16 value) : type{ValueType::U16}, imm_u16{value} {}
+    explicit Imm(u32 value) : type{ValueType::U32}, imm_u32{value} {}
+    explicit Imm(u64 value) : type{ValueType::U64}, imm_u64{value} {}
 
 private:
     ValueType type{ValueType::VOID};
@@ -85,20 +85,22 @@ private:
     };
 };
 
-#pragma pack(1)
+#pragma pack(push, 1)
 class Value {
 public:
     constexpr Value(Inst* in = {}) : inst(in) {}
 
-    Inst* Def() const { return inst; }
+    [[nodiscard]] Inst* Def() const { return inst; }
+
+    void SetType(ValueType type) const;
+
+    [[nodiscard]] ValueType Type() const;
 
 private:
     Inst* inst{};
-    ValueType type{};
 };
 
 // Uniform buffer
-#pragma pack(1)
 class Uniform {
 public:
     explicit Uniform(u32 offset, ValueType type);
@@ -111,13 +113,11 @@ private:
     ValueType type{};
 };
 
-#pragma pack(1)
 struct Local {
     u32 id{};
     ValueType type{};
 };
 
-#pragma pack(1)
 struct DataClass {
     ArgType type{ArgType::Void};
     union {
@@ -157,7 +157,6 @@ enum class Flags : u16 {
 
 DECLARE_ENUM_FLAG_OPERATORS(Flags)
 
-#pragma pack(1)
 struct OperandOp {
     enum Type : u8 {
         Plus = 1 << 0,
@@ -175,7 +174,6 @@ struct OperandOp {
     u8 shift_ext{};
 };
 
-#pragma pack(1)
 struct ArgClass {
     ArgType type;
     union {
@@ -249,6 +247,7 @@ struct ArgClass {
         return *this;
     }
 };
+#pragma pack(pop)
 
 class Operand {
     friend class Inst;
@@ -294,7 +293,7 @@ public:
 
     [[nodiscard]] constexpr bool IsOperand() const { return value.type == ArgType::Operand; }
 
-    [[nodiscard]] constexpr bool IsLambda() const { return value.type == ArgType::Operand; }
+    [[nodiscard]] constexpr bool IsLambda() const { return value.type == ArgType::Lambda; }
 
     [[nodiscard]] ArgType GetType() const { return value.type; }
 

@@ -9,12 +9,11 @@
 
 namespace swift::runtime::ir {
 
-#pragma pack(4)
 class Block : public SlabObject<Block, true> {
 public:
     explicit Block() = default;
 
-    explicit Block(Location location) : location(location) {}
+    explicit Block(const Location &location) : location(location) {}
 
     explicit Block(u32 id, Location location) : id(id), location(location) {}
 
@@ -31,36 +30,29 @@ public:
 
     void AppendInst(Inst* inst);
 
-#define INST0(name, ret, ...)                                                                      \
-    ret name() { return ret{AppendInst(OpCode::name)}; }
-#define INST1(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{AppendInst(OpCode::name, args...)};                                             \
-    }
-#define INST2(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{AppendInst(OpCode::name, args...)};                                             \
-    }
-#define INST3(name, ret, ...)                                                                      \
-    template <typename... Args> ret name(const Args&... args) {                                    \
-        return ret{AppendInst(OpCode::name, args...)};                                             \
-    }
-#define INST4(name, ret, ...)                                                                      \
+#define INST(name, ret, ...)                                                                      \
     template <typename... Args> ret name(const Args&... args) {                                    \
         return ret{AppendInst(OpCode::name, args...)};                                             \
     }
 #include "ir.inc"
-#undef INST0
-#undef INST1
-#undef INST2
-#undef INST3
-#undef INST4
+#undef INST
 
     bool operator<(const Block& rhs) const { return location < rhs.location; }
 
     bool operator>(const Block& rhs) const { return location > rhs.location; }
 
     bool operator==(const Block& rhs) const { return location == rhs.location; }
+
+    // for rbtree compare
+    static NOINLINE int Compare(const Block &lhs, const Block &rhs) {
+        if (rhs.location > lhs.location) {
+            return 1;
+        } else if (rhs.location < lhs.location) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
 
     union {
         IntrusiveMapNode map_node{};

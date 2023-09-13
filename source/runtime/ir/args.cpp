@@ -3,8 +3,20 @@
 //
 
 #include "args.h"
+#include "runtime/common/logging.h"
+#include "runtime/ir/instr.h"
 
 namespace swift::runtime::ir {
+
+void Value::SetType(ValueType type) const {
+    ASSERT(Def());
+    Def()->SetReturn(type);
+}
+
+ValueType Value::Type() const {
+    ASSERT(Def());
+    return Def()->ReturnType();
+}
 
 Lambda::Lambda() { address.type = ArgType::Void; }
 
@@ -19,17 +31,17 @@ Lambda::Lambda(const Value& value) {
 }
 
 Imm& Lambda::GetImm() {
-    assert(address.type == ArgType::Imm);
+    ASSERT(address.type == ArgType::Imm);
     return address.inner.imm;
 }
 
 Value& Lambda::GetValue() {
-    assert(address.type == ArgType::Value);
+    ASSERT(address.type == ArgType::Value);
     return address.inner.value;
 }
 
 Value& Lambda::GetValue() const {
-    assert(address.type == ArgType::Value);
+    ASSERT(address.type == ArgType::Value);
     return address.inner.value;
 }
 

@@ -47,7 +47,9 @@ void Inst::SetArg(int index, const Operand& arg) {
 }
 
 void Inst::Use(const Value& value) {
-    value.Def()->num_use++;
+    auto def = value.Def();
+    ASSERT_MSG(def, "Value used by {} is null!", op_code);
+    def->num_use++;
 
     if (IsPseudoOperation()) {
         auto insert_point = value.Def();
@@ -60,7 +62,9 @@ void Inst::Use(const Value& value) {
 }
 
 void Inst::UnUse(const Value& value) {
-    value.Def()->num_use--;
+    auto def = value.Def();
+    ASSERT_MSG(def, "Value used by {} is null!", op_code);
+    def->num_use--;
 
     if (IsPseudoOperation()) {
         auto insert_point = value.Def();
@@ -72,6 +76,18 @@ void Inst::UnUse(const Value& value) {
         next_pseudo_inst = {};
     }
 }
+
+void Inst::SetId(u16 id_) { this->id = id_; }
+
+void Inst::SetReturn(ValueType type) { this->ret_type = type; }
+
+u16 Inst::Id() const { return id; }
+
+ValueType Inst::ReturnType() const {
+    return ret_type;
+}
+
+bool Inst::HasValue() { return GetIRMetaInfo(op_code).return_type == ArgType::Value; }
 
 bool Inst::IsPseudoOperation() {
     switch (op_code) {
@@ -92,7 +108,7 @@ Inst* Inst::GetPseudoOperation(OpCode code) {
     auto pseudo_inst = next_pseudo_inst;
     while (pseudo_inst) {
         if (pseudo_inst->op_code == code) {
-            assert(pseudo_inst->GetArg<Value>(0).Def() == this);
+            ASSERT(pseudo_inst->GetArg<Value>(0).Def() == this);
             return pseudo_inst;
         }
         pseudo_inst = pseudo_inst->next_pseudo_inst;
@@ -101,16 +117,20 @@ Inst* Inst::GetPseudoOperation(OpCode code) {
 }
 
 void Inst::Validate(Inst* inst) {
-    assert(inst);
-    assert(inst->op_code >= OpCode::Void && inst->op_code < OpCode::COUNT);
+    ASSERT(inst);
+    ASSERT(inst->op_code >= OpCode::Void && inst->op_code < OpCode::COUNT);
+    if (inst->op_code == OpCode::CallLambda) {
+        ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallLambda arg 0 must be Lambda type!");
+        return;
+    }
     if (inst->op_code > OpCode::Void && inst->op_code < OpCode::BASE_COUNT) {
-        auto &ir_info = GetIRMetaInfo(inst->op_code);
+        auto& ir_info = GetIRMetaInfo(inst->op_code);
         int inner_arg_index{};
         int arg_index{};
         while (inner_arg_index < Inst::max_args) {
-            auto &inst_arg = inst->ArgAt(inner_arg_index);
+            auto& inst_arg = inst->ArgAt(inner_arg_index);
             auto arg_type = ir_info.arg_types[arg_index];
-            assert(inst_arg.GetType() == arg_type);
+            ASSERT_MSG(inst_arg.GetType() == arg_type, "{} has invalid arg!", inst->op_code);
             arg_index++;
             if (arg_type == ArgType::Operand) {
                 inner_arg_index += 3;
@@ -121,7 +141,8 @@ void Inst::Validate(Inst* inst) {
     } else {
         switch (inst->op_code) {
             case OpCode::SetLocation: {
-                assert(inst->ArgAt(0).GetType() == ArgType::Imm);
+                ASSERT_MSG(inst->ArgAt(0).GetType() == ArgType::Imm,
+                           "SetLocation arg 0 must be Imm type!");
                 break;
             }
             default:

@@ -12,8 +12,9 @@ TEST_CASE("Test runtime-init") {
     Block::InitializeSlabHeap(0x10000);
     Function::InitializeSlabHeap(0x2000);
     const auto &meta = GetIRMetaInfo(OpCode::ZeroExtend);
-    auto inst = Inst::Create(OpCode::ZeroExtend, Imm(true), Cond::AL, Operand{Value(nullptr), Imm(true)});
-    assert(inst);
-    auto arg = inst->GetArg<Operand>(2);
-    inst->SetArg(2, arg);
+    auto block = new Block(Location{8});
+    auto value1 = block->LoadImm(Imm{(u32) 0x100});
+    auto zero = block->GetZero(value1);
+    auto value = block->CallLambda(Lambda{zero});
+    assert(value.Def());
 }

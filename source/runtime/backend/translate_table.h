@@ -26,7 +26,7 @@ public:
 
     TranslateEntry* Data() { return entries.data(); }
 
-    u32 Hash(size_t key) {
+    [[nodiscard]] u32 Hash(size_t key) const {
         u64 merged = key >> 2;
         return (merged >> hash_bits ^ merged) & (size - 1);
     }

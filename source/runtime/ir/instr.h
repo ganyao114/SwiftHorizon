@@ -6,6 +6,8 @@
 
 #include <array>
 #include "args.h"
+#include "fmt/format.h"
+#include "runtime/common/logging.h"
 #include "runtime/common/slab_alloc.h"
 
 namespace swift::runtime::ir {
@@ -15,19 +17,9 @@ class Inst;
 
 enum class OpCode : u8 {
     Void = 0,
-#define INST0(OP, ...) OP,
-#define INST1(OP, ...) OP,
-#define INST2(OP, ...) OP,
-#define INST3(OP, ...) OP,
-#define INST4(OP, ...) OP,
-
+#define INST(OP, ...) OP,
 #include "ir.inc"
-
-#undef INST0
-#undef INST1
-#undef INST2
-#undef INST3
-#undef INST4
+#undef INST
     BASE_COUNT,
     SetLocation,
     COUNT
@@ -48,11 +40,11 @@ concept InstAllocator = requires(T allocator, Inst* inst, OpCode code) {
     { allocator.Delete(inst) };
 };
 
-#pragma pack(1)
+#pragma pack(push, 1)
 class Inst : public SlabObject<Inst, true> {
     friend class Block;
 public:
-    static constexpr auto max_args = 5;
+    static constexpr auto max_args = 4;
 
     template <typename... Args> void SetArgs(const Args&... args) {
         constexpr auto arg_count = sizeof...(args);
@@ -103,7 +95,7 @@ public:
 
     template <typename T> T GetArg(int index) {
         if constexpr (std::is_same<T, Operand>::value) {
-            assert(arguments[index].IsOperand());
+            ASSERT(arguments[index].IsOperand());
             Operand operand{};
             operand.op = arguments[index++].Get<Operand::Op>();
             operand.left = arguments[index++].value;
@@ -117,19 +109,34 @@ public:
     void Use(const Value& value);
     void UnUse(const Value& value);
 
+    void SetId(u16 id);
+    void SetReturn(ValueType type);
+    u16 Id() const;
+    ValueType ReturnType() const;
+    bool HasValue();
     bool IsPseudoOperation();
 
     Inst* GetPseudoOperation(OpCode code);
 
     IntrusiveListNode list_node{};
 private:
-
     Inst* next_pseudo_inst{};
     std::array<Arg, max_args> arguments{};
     OpCode op_code{OpCode::Void};
     u8 num_use{};
+    u16 id{};
+    ValueType ret_type{};
 };
+#pragma pack(pop)
 
 using InstList = IntrusiveList<&Inst::list_node>;
 
 }  // namespace swift::runtime::ir
+
+template<>
+struct fmt::formatter<swift::runtime::ir::OpCode> : fmt::formatter<std::string> {
+    template<typename FormatContext>
+    auto format(swift::runtime::ir::OpCode op, FormatContext& ctx) const {
+        return formatter<std::string>::format(swift::runtime::ir::GetIRMetaInfo(op).name, ctx);
+    }
+};
