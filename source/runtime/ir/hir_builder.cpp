@@ -11,6 +11,10 @@ Edge::Edge(HIRBlock* src, HIRBlock* dest) : src_block(src), dest_block(dest) {}
 
 HIRBlock::HIRBlock(Block* block) : block(block) {}
 
+HIRValueList& HIRBlock::GetHIRValues() { return values; }
+
+u16 HIRBlock::GetOrderId() { return order_id; }
+
 void HIRBlock::AddIncomingEdge(Edge* edge) { incoming_edges.push_back(*edge); }
 
 void HIRBlock::AddOutgoingEdge(Edge* edge) { outgoing_edges.push_back(*edge); }
@@ -20,6 +24,7 @@ bool HIRBlock::HasIncomingEdges() { return !incoming_edges.empty(); }
 bool HIRBlock::HasOutgoingEdges() { return !outgoing_edges.empty(); }
 
 u16 HIRBlock::MaxValueCount() { return 0; }
+u16 HIRBlock::MaxBlockCount() { return 0; }
 
 HIRValue::HIRValue(u16 id, const Value& value, HIRBlock* block) : value(value), block(block) {
     if (auto def = value.Def(); def) {
@@ -27,30 +32,34 @@ HIRValue::HIRValue(u16 id, const Value& value, HIRBlock* block) : value(value), 
     }
 }
 
-HIRFunction::HIRFunction(const Location& begin,
+HIRFunction::HIRFunction(Function* function,
+                         const Location& begin,
                          const Location& end,
-                         ObjectPool<HIRBlock>& block_pool,
-                         ObjectPool<Edge>& edge_pool,
-                         ObjectPool<HIRValue>& value_pool)
-        : begin(begin)
-        , end(end)
-        , hir_block_pool(block_pool)
-        , hir_edge_pool(edge_pool)
-        , hir_value_pool(value_pool) {
-    AddBlock(new Block(begin));
-}
+                         HIRPools& pools)
+        : function(function), begin(begin), end(end), pools(pools) {}
 
-void HIRFunction::AddBlock(Block* block) {
-    auto hir_block = hir_block_pool.Create(block);
+void HIRFunction::AppendBlock(Location start, Location end_) {
+    auto hir_block = pools.blocks.Create(new Block(start));
+    hir_block->block->SetEndLocation(end_);
     hir_block->order_id = block_order_id++;
     blocks.push_back(*hir_block);
     current_block = hir_block;
 }
 
+void HIRFunction::AppendInst(Inst* inst) {
+    current_block->block->AppendInst(inst);
+    if (inst->HasValue()) {
+        auto hir_value = pools.values.Create(value_order_id++, Value{inst}, current_block);
+        current_block->values.push_back(*hir_value);
+    }
+}
+
+HIRBlockList& HIRFunction::GetHIRBlocks() { return blocks; }
+
 void HIRFunction::AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional) {
     assert(src && dest);
     bool dest_was_dominated = dest->HasIncomingEdges();
-    auto edge = hir_edge_pool.Create(src, dest);
+    auto edge = pools.edges.Create(src, dest);
     if (conditional) {
         edge->flags |= Edge::CONDITIONAL;
     }
@@ -73,14 +82,26 @@ void HIRFunction::EndBlock(Terminal terminal) {
     current_block->block->SetTerminal(std::move(terminal));
     current_block = {};
 }
+u16 HIRFunction::MaxBlockCount() { return block_order_id + 1; }
+u16 HIRFunction::MaxValueCount() { return value_order_id + 1; }
 
-HIRBuilder::HIRBuilder(u32 func_cap)
-        : hir_function_pool(func_cap)
-        , hir_block_pool(func_cap * 8)
-        , hir_edge_pool(func_cap * 16)
-        , hir_value_pool(func_cap * 256) {}
+HIRPools::HIRPools(u32 func_cap)
+        : functions(func_cap)
+        , blocks(func_cap * 8)
+        , edges(func_cap * 16)
+        , values(func_cap * 256)
+        , mem_arena(func_cap * 512) {}
 
-void HIRBuilder::SetLocation(const Location& location) {}
+HIRBuilder::HIRBuilder(u32 func_cap) : pools(func_cap) {}
+
+void HIRBuilder::AppendFunction(Location start, Location end) {
+    current_function = pools.functions.Create(new Function(start), start, end, pools);
+    hir_functions.push_back(*current_function);
+}
+
+HIRFunctionList& HIRBuilder::GetHIRFunctions() { return hir_functions; }
+
+void HIRBuilder::SetLocation(Location location) { current_location = location; }
 
 void HIRBuilder::If(const terminal::If& if_) {
     ASSERT_MSG(!current_function, "current function is null!");

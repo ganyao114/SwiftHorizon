@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include "vector"
+#include "types.h"
 
 namespace swift::runtime {
 
-template <typename T>
-    requires std::is_destructible_v<T>
+template <typename T, bool destruct = false>
+    requires std::is_destructible_v<T> || (!destruct)
 class ObjectPool {
 public:
     explicit ObjectPool(size_t chunk_size = 64) : new_chunk_size{chunk_size * sizeof(T)} {
@@ -70,7 +70,11 @@ private:
                 , num_objects{std::exchange(rhs.num_objects, 0)}
                 , storage{std::move(rhs.storage)} {}
 
-        ~Chunk() { Release(); }
+        ~Chunk() {
+            if constexpr (destruct) {
+                Release();
+            }
+        }
 
         void Release() {
             std::destroy_n(storage.get(), used_objects);
@@ -96,7 +100,7 @@ private:
     }
 
     Chunk* node{};
-    std::vector<Chunk> chunks;
+    Vector<Chunk> chunks;
     size_t new_chunk_size{};
 };
 

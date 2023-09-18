@@ -123,6 +123,10 @@ void Inst::Validate(Inst* inst) {
         ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallLambda arg 0 must be Lambda type!");
         return;
     }
+    if (inst->op_code == OpCode::CallFunction) {
+        ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallFunction arg 0 must be Lambda type!");
+        return;
+    }
     if (inst->op_code > OpCode::Void && inst->op_code < OpCode::BASE_COUNT) {
         auto& ir_info = GetIRMetaInfo(inst->op_code);
         int inner_arg_index{};

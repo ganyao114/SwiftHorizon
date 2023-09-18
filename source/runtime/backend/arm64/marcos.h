@@ -31,14 +31,6 @@
 #define VALID_PAGE_INDEX_BITS   20
 
 // ctx offsets
-#define OFF_PC              272
-#define OFF_NZCV            280
-#define OFF_VECTOR          288
-#define OFF_FPCR            836
-#define OFF_FPSR            832
-#define OFF_EXCLUSIVE_STATE 800
-#define OFF_EXCLUSIVE_ADDR  808
-#define OFF_EXCLUSIVE_VALUE 816
 
 #define OFF_L1_CACHE        0
 #define OFF_L2_CACHE        8
@@ -46,50 +38,33 @@
 #define OFF_INTERFACE       24
 #define OFF_EXCEPTION       32
 #define OFF_RSB_PTR         72
+#define OFF_LOC             80
 
 // regs
-#define ctx         x19
-#define vregs       x23
-#define args        x20
-#define base        x21
-#define cache       x22
-#define rsb_ptr     x25
-#define pt          x15
-#define xn          x4
-#define xd          x5
-#define xt          x6
-#define xt2         x7
-#define xm          x8
-#define xs          x9
-#define xa          x10
-#define wn          w4
-#define wd          w5
-#define wt          w6
-#define wt2         w7
-#define wm          w8
-#define ws          w9
-#define wa          w10
-#define arg         w26
-#define arg_x       x26
-#define handle      w27
-#define handle_x    x27
 #define state       x28
-#define value       x24
-#define value_w     w24
+#define local       x27
+#define pt          x26
+#define cache       x25
+#define rsb_ptr     x24
+#define args        x23
+#define arg         x22
+#define handle      x21
+#define loc         x20
+
 #define ip          x11
-#define pc          ip
 #define ip0         x16
 #define ip1         x17
 #define ip2         x12
 #define ip3         x13
 #define ip4         x14
+#define ip5         x15
 #define ipw         w11
 #define ipw0        w16
 #define ipw1        w17
 #define ipw2        w12
 #define ipw3        w13
 #define ipw4        w14
-#define paddr       x3
+#define ipw5        w15
 #define tmp0        w3
 #define tmp1        w2
 #define tmp2        w1
@@ -118,40 +93,15 @@
 #define ipq0        q11
 #define ipq1        q12
 
-#define bt  b10
-#define bd  b10
-
-#define sm  s8
-#define sn  s9
-#define sd  s10
-#define st  s10
-
-#define hm  h8
-#define hn  h9
-#define hd  h10
-#define ht  h10
-
-#define dm  d8
-#define dn  d9
-#define dd  d10
-#define dt  d10
-
-#define qm  q8
-#define qn  q9
-#define qd  q10
-#define qt  q10
-
 // common operations
-#define load_next       ldp arg, handle, [args], #8
+#define load_next       ldp arg, handle, [args], #16
 
 .macro goto_next
-    add handle_x, handle_x, base
-    br handle_x
+    br handle
 .endm
 
 .macro go_link
-    add handle_x, handle_x, base
-    blr handle_x
+    blr handle
 .endm
 
 .macro next_instr
@@ -160,53 +110,16 @@
 .endm
 
 .macro save_caller_regs
-    stp pt, x30, [sp, #-16]!
-    mrs ip, nzcv
-    str ipw, [ctx, #OFF_NZCV]
-    mrs ip, fpsr
-    str ipw, [ctx, #OFF_FPSR]
-    mrs ip, fpcr
-    str ipw, [ctx, #OFF_FPCR]
+    stp x29, x30, [sp, #-16]!
 .endm
 
 .macro restore_caller_regs
-	ldp pt, x30, [sp], #16
-    ldr ipw, [ctx, #OFF_NZCV]
-    msr nzcv, ip
-    ldr ipw, [ctx, #OFF_FPSR]
-    msr fpsr, ip
-    ldr ipw, [ctx, #OFF_FPCR]
-    msr fpcr, ip
+	ldp x29, x30, [sp], #16
 .endm
 
-#define common_rn(x)  ubfx x, arg, 6, 6
-#define common_rd(x)  ubfx x, arg, 0, 6
-#define common_rt(x)  ubfx x, arg, 0, 6
-#define common_vt(x)  ubfx x, arg, 0, 6
-#define common_rt2(x)  ubfx x, arg, 12, 6
-#define common_vt2(x)  ubfx x, arg, 12, 6
-#define common_rs(x)  ubfx x, arg, 18, 6
-#define common_imm20(x)  ubfx x, arg, 12, 20
-#define common_imm16(x)  ubfx x, arg, 16, 16
-#define common_imm14(x)  ubfx x, arg, 18, 14
-#define common_imm10(x)  ubfx x, arg, 22, 10
-#define scale_rm(x)  ubfx x, arg, 10, 5
-#define scale_rn(x)  ubfx x, arg, 5, 5
-#define scale_rd(x)  ubfx x, arg, 0, 5
-#define scale_vm(x)  ubfx x, arg, 10, 5
-#define scale_vn(x)  ubfx x, arg, 5, 5
-#define scale_vd(x)  ubfx x, arg, 0, 5
 #define scale_imm4(x)  ubfx x, arg, 16, 4
 #define extract(x, p, s)  ubfx x, arg, p, s
 #define extract64(x, p, s)  ubfx x, arg_x, p, s
-#define set_w(v, x)   str v, [ctx, x, lsl #2]
-#define get_w(v, x)   ldr v, [ctx, x, lsl #2]
-#define set_x(v, x)   str v, [ctx, x, lsl #3]
-#define get_x(v, x)   ldr v, [ctx, x, lsl #3]
-#define set_d(v, x)   str v, [vregs, x, lsl #3]
-#define get_d(v, x)   ldr v, [vregs, x, lsl #3]
-#define set_q(v, x)   str v, [vregs, x, lsl #4]
-#define get_q(v, x)   ldr v, [vregs, x, lsl #4]
 
 #define load_b_arg(x)   ldrb x, [args], #1
 #define load_h_arg(x)   ldrh x, [args], #2

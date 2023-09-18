@@ -9,8 +9,13 @@
 #include <boost/intrusive/slist.hpp>
 #include <boost/intrusive/rbtree.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/container/small_vector.hpp>
 
 namespace swift::runtime {
+
+struct NonTriviallyDummy {
+    NonTriviallyDummy() noexcept = default;
+};
 
 template <auto NodeMember>
 using IntrusiveList = typename ams::util::IntrusiveListMemberTraits<NodeMember>::ListType;
@@ -29,5 +34,11 @@ template<auto Member, typename Comparator = ams::util::impl::GetParentType<Membe
 using IntrusiveMap = typename ams::util::IntrusiveRedBlackTreeMemberTraitsDeferredAssert<Member>::template TreeType<Comparator>;
 
 using BitVector = boost::dynamic_bitset<>;
+
+template <typename T>
+using Vector = typename std::vector<T>;
+
+template <typename T, size_t N>
+using StackVector = typename boost::container::small_vector<T, N>;
 
 }

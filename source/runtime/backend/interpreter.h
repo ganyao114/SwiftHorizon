@@ -12,8 +12,8 @@ struct InterpCache {
 };
 
 struct InterpFrame {
-    u32 common_arg;
-    u32 handle_offset;
+    size_t common_arg;
+    size_t handle_ptr;
 };
 
 class Interpreter {
@@ -22,8 +22,6 @@ public:
 private:
     u32 buffer_cursor = 0;
     std::vector<u8> frame_buffer{};
-    u32 current_instr{};
-    uintptr_t interp_handle_base;
 };
 
 }

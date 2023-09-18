@@ -10,6 +10,8 @@ namespace swift::runtime::ir {
 
 class Location {
 public:
+    constexpr Location() = default;
+
     explicit Location(size_t value) : value(value) {}
 
     bool operator==(const Location& o) const { return value == o.Value(); }
@@ -19,7 +21,7 @@ public:
     [[nodiscard]] size_t Value() const { return value; }
 
 private:
-    size_t value;
+    size_t value{};
 };
 
 inline bool operator<(const Location& x, const Location& y) noexcept {

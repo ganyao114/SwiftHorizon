@@ -11,12 +11,18 @@ namespace swift::runtime::ir {
 class Function : public SlabObject<Function, true> {
 public:
 
+    explicit Function() = default;
+
+    explicit Function(const Location &location) : location(location) {}
+
     union {
-        IntrusiveMapNode map_node{};
+        NonTriviallyDummy dummy{};
+        IntrusiveMapNode map_node;
         IntrusiveListNode list_node;
     };
 private:
-    BlockMap blocks;
+    Location location;
+    BlockMap blocks{};
 };
 
 using FunctionList = IntrusiveList<&Function::list_node>;

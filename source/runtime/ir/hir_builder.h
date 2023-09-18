@@ -5,6 +5,7 @@
 #pragma once
 
 #include "runtime/common/object_pool.h"
+#include "runtime/common/mem_arena.h"
 #include "runtime/ir/function.h"
 #include "runtime/ir/module.h"
 
@@ -12,6 +13,7 @@ namespace swift::runtime::ir {
 
 class HIRBlock;
 class HIRFunction;
+struct HIRPools;
 
 struct HostGPR {
     static constexpr auto INVALID = u16(-1);
@@ -30,6 +32,7 @@ struct SpillSlot {
 
 class DataContext {
 public:
+    virtual u16 MaxBlockCount() = 0;
     virtual u16 MaxValueCount() = 0;
 };
 
@@ -53,12 +56,7 @@ public:
 
 #pragma pack(push, 1)
 struct ValueAllocated {
-    enum Type : u8 {
-        NONE,
-        GPR,
-        FPR,
-        MEM
-    };
+    enum Type : u8 { NONE, GPR, FPR, MEM };
     Type type;
     union {
         HostGPR host_gpr;
@@ -66,9 +64,7 @@ struct ValueAllocated {
         SpillSlot spill_slot;
     };
 
-    [[nodiscard]] bool Allocated() const {
-        return type != NONE;
-    }
+    [[nodiscard]] bool Allocated() const { return type != NONE; }
 
     explicit ValueAllocated() : type(NONE) {}
 };
@@ -77,13 +73,18 @@ struct ValueAllocated {
 #pragma pack(push, 4)
 struct HIRValue {
     Value value;
-    HIRBlock *block;
+    HIRBlock* block;
     IntrusiveListNode list_node{};
     ValueAllocated allocated{};
 
     explicit HIRValue(u16 id, const Value& value, HIRBlock* block);
 };
 #pragma pack(pop, 4)
+
+struct HIRLocal {
+    Local local;
+    HIRValue *current_value{};
+};
 
 using HIRValueList = IntrusiveList<&HIRValue::list_node>;
 
@@ -92,6 +93,9 @@ class HIRBlock : public DataContext {
 
 public:
     explicit HIRBlock(Block* block);
+
+    HIRValueList& GetHIRValues();
+    u16 GetOrderId();
 
     void AddOutgoingEdge(Edge* edge);
     void AddIncomingEdge(Edge* edge);
@@ -102,6 +106,7 @@ public:
 
     auto& GetOutgoingEdges() { return outgoing_edges; }
 
+    u16 MaxBlockCount() override;
     u16 MaxValueCount() override;
 
     IntrusiveListNode list_node;
@@ -109,71 +114,95 @@ public:
 private:
     u16 order_id{};
     Block* block;
+    HIRValueList values{};
+    Vector<HIRLocal> locals{};
     IntrusiveList<&Edge::outgoing_edges> outgoing_edges;
     IntrusiveList<&Edge::incoming_edges> incoming_edges;
 };
 
 using HIRBlockList = IntrusiveList<&HIRBlock::list_node>;
 
-class HIRFunction {
+class HIRFunction : public DataContext {
 public:
-    explicit HIRFunction(const Location& begin,
+    explicit HIRFunction(Function* function,
+                         const Location& begin,
                          const Location& end,
-                         ObjectPool<HIRBlock>& block_pool,
-                         ObjectPool<Edge>& edge_pool,
-                         ObjectPool<HIRValue>& value_pool);
+                         HIRPools &pools);
 
     template <typename... Args> Inst* AppendInst(OpCode op, const Args&... args) {
         ASSERT(current_block);
         auto inst = new Inst(op);
         inst->SetArgs(args...);
-        current_block->block->AppendInst(inst);
-        if (inst->HasValue()) {
-            auto hir_value = hir_value_pool.Create(value_order_id++, Value{inst}, current_block);
-            values.push_back(*hir_value);
-        }
+        AppendInst(inst);
         return inst;
     }
 
-    void AddBlock(Block* block);
+    void AppendBlock(Location start, Location end = {});
+    void AppendInst(Inst* inst);
+    HIRBlockList& GetHIRBlocks();
     void AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional = false);
     void RemoveEdge(Edge* edge);
     void MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right);
-    bool SplitBlock(HIRBlock *new_block, HIRBlock *old_block);
+    bool SplitBlock(HIRBlock* new_block, HIRBlock* old_block);
 
     void EndBlock(Terminal terminal);
 
-private:
+    u16 MaxBlockCount() override;
+    u16 MaxValueCount() override;
 
+    IntrusiveListNode list_node;
+
+private:
     struct {
         u32 current_slot{0};
     } spill_stack{};
 
+    Function* function;
     Location begin;
     Location end;
     u16 block_order_id{};
     u16 value_order_id{};
-    ObjectPool<Edge>& hir_edge_pool;
-    ObjectPool<HIRBlock>& hir_block_pool;
-    ObjectPool<HIRValue>& hir_value_pool;
+    HIRPools &pools;
+
     HIRBlockList blocks{};
-    HIRValueList values{};
     HIRBlock* current_block{};
+};
+
+using HIRFunctionList = IntrusiveList<&HIRFunction::list_node>;
+
+struct HIRPools {
+    void ReleaseContents() {
+        functions.ReleaseContents();
+        blocks.ReleaseContents();
+        values.ReleaseContents();
+        edges.ReleaseContents();
+    }
+
+    explicit HIRPools(u32 func_cap = 1);
+
+    MemArena mem_arena;
+    ObjectPool<HIRFunction, true> functions;
+    ObjectPool<HIRBlock, true> blocks;
+    ObjectPool<HIRValue> values;
+    ObjectPool<Edge> edges;
 };
 
 class HIRBuilder {
 public:
-
     explicit HIRBuilder(u32 func_cap = 1);
 
-#define INST(name, ret, ...)                                                                      \
+    void AppendFunction(Location start, Location end = {});
+
+    HIRFunctionList& GetHIRFunctions();
+
+#define INST(name, ret, ...)                                                                       \
     template <typename... Args> ret name(const Args&... args) {                                    \
         return ret{current_function->AppendInst(OpCode::name, args...)};                           \
     }
 #include "ir.inc"
 #undef INST
 
-    void SetLocation(const Location &location);
+    void SetLocation(Location location);
 
     void If(const terminal::If& if_);
 
@@ -182,11 +211,9 @@ public:
     void LinkBlock(const terminal::LinkBlock& switch_);
 
 private:
-    // temp objects
-    ObjectPool<HIRFunction> hir_function_pool;
-    ObjectPool<HIRBlock> hir_block_pool;
-    ObjectPool<Edge> hir_edge_pool;
-    ObjectPool<HIRValue> hir_value_pool;
+    HIRPools pools;
+    HIRFunctionList hir_functions{};
+    Location current_location;
     HIRFunction* current_function{};
 };
 

@@ -1,12 +1,16 @@
 enable_language(ASM)
+add_subdirectory(externals)
 
 if ("arm64" IN_LIST ARCHITECTURE)
-    set(RUNTIME_ARCH_SOURCE backend/arm64/context.S)
+    set(RUNTIME_ARCH_SOURCE
+            backend/arm64/context.S
+            backend/arm64/jit/jit_context.cpp
+            backend/arm64/jit/jit_context.h)
 else ()
-    set(RUNTIME_ARCH_SOURCE )
+    set(RUNTIME_ARCH_SOURCE)
 endif ()
 
-add_library(runtime STATIC
+add_library(swift_runtime STATIC
         include/sruntime.h
         include/address_space.h
         include/config.h
@@ -35,6 +39,8 @@ add_library(runtime STATIC
         ir/hir_builder.cpp
         ir/hir_builder.h
         ir/ir_meta.cpp
+        ir/opts/dataflow_analysis_pass.cpp
+        ir/opts/dataflow_analysis_pass.h
         backend/translate_table.h
         backend/interpreter.cpp
         backend/interpreter.h
@@ -42,9 +48,12 @@ add_library(runtime STATIC
         backend/address_space.cpp
         backend/address_space.h
         backend/interface.cpp
-        ${RUNTIME_ARCH_SOURCE})
-
+        backend/entrypoint.h
+        ${RUNTIME_ARCH_SOURCE}
+        ir/opts/cfg_analysis_pass.cpp
+        ir/opts/cfg_analysis_pass.h)
 
 
 find_package(Boost 1.57 REQUIRED)
-target_link_libraries(runtime PUBLIC base vapours Boost::boost)
+target_link_libraries(swift_runtime PUBLIC base vapours Boost::boost vixl)
+add_library(swift::runtime ALIAS swift_runtime)

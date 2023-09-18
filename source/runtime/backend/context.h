@@ -9,18 +9,15 @@
 namespace swift::runtime::backend {
 
 constexpr u32 rsb_init_key = UINT32_MAX;
-constexpr size_t rsb_stack_size = 32;
+constexpr size_t rsb_stack_size = 64;
 
 struct RSBFrame {
     u32 location_hash{};
     u32 cache_slot{};
 };
 
-struct Context {
-    ir::Location current_loc{0};
-    void* pt{};
-    void* local_buffer{};
-    void* uniform_buffer{};
+struct RSBBuffer {
+    std::array<RSBFrame, rsb_stack_size + 2> rsb_frames{};
 };
 
 struct State {
@@ -28,9 +25,11 @@ struct State {
     void* l2_code_cache{};
     void* interface{};
     volatile u32 halt_reason{0};
-
-    void* rsb_pointer = reinterpret_cast<void*>(rsb_frame.data());
-    std::array<RSBFrame, rsb_stack_size + 2> rsb_frame{};
+    RSBFrame* rsb_pointer{};
+    ir::Location current_loc{0};
+    void* pt{};
+    void *local_buffer{};
+    u8 uniform_buffer_begin[];
 };
 
 }  // namespace swift::runtime::backend

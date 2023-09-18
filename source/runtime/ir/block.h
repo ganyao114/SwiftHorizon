@@ -30,6 +30,8 @@ public:
 
     void AppendInst(Inst* inst);
 
+    void SetEndLocation(Location location);
+
 #define INST(name, ret, ...)                                                                      \
     template <typename... Args> ret name(const Args&... args) {                                    \
         return ret{AppendInst(OpCode::name, args...)};                                             \
@@ -55,13 +57,15 @@ public:
     }
 
     union {
-        IntrusiveMapNode map_node{};
+        NonTriviallyDummy dummy{};
+        IntrusiveMapNode map_node;
         IntrusiveListNode list_node;
     };
 
 private:
     u32 id{};
     Location location{0};
+    Location end{0};
     InstList inst_list{};
     Terminal block_term{};
 };

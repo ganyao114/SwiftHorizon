@@ -14,4 +14,8 @@ void Block::AppendInst(Inst* inst) {
     inst_list.push_back(*inst);
 }
 
+void Block::SetEndLocation(Location end_) {
+    this->end = end_;
+}
+
 }  // namespace swift::runtime::ir
