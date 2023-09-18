@@ -43,6 +43,7 @@ concept InstAllocator = requires(T allocator, Inst* inst, OpCode code) {
 #pragma pack(push, 1)
 class Inst : public SlabObject<Inst, true> {
     friend class Block;
+
 public:
     static constexpr auto max_args = 4;
 
@@ -81,7 +82,6 @@ public:
     explicit Inst(OpCode code);
 
     Arg& ArgAt(int index);
-    void SetArg(int index, const Arg& arg);
     void SetArg(int index, const Void& arg);
     void SetArg(int index, const Value& arg);
     void SetArg(int index, const Imm& arg);
@@ -109,6 +109,7 @@ public:
     void Use(const Value& value);
     void UnUse(const Value& value);
 
+    OpCode GetOp();
     void SetId(u16 id);
     void SetReturn(ValueType type);
     u16 Id() const;
@@ -117,8 +118,12 @@ public:
     bool IsPseudoOperation();
 
     Inst* GetPseudoOperation(OpCode code);
+    void DestroyArg(u8 arg_idx);
+
+    virtual ~Inst();
 
     IntrusiveListNode list_node{};
+
 private:
     Inst* next_pseudo_inst{};
     std::array<Arg, max_args> arguments{};
@@ -133,9 +138,8 @@ using InstList = IntrusiveList<&Inst::list_node>;
 
 }  // namespace swift::runtime::ir
 
-template<>
-struct fmt::formatter<swift::runtime::ir::OpCode> : fmt::formatter<std::string> {
-    template<typename FormatContext>
+template <> struct fmt::formatter<swift::runtime::ir::OpCode> : fmt::formatter<std::string> {
+    template <typename FormatContext>
     auto format(swift::runtime::ir::OpCode op, FormatContext& ctx) const {
         return formatter<std::string>::format(swift::runtime::ir::GetIRMetaInfo(op).name, ctx);
     }

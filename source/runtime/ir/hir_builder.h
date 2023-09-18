@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "runtime/common/object_pool.h"
 #include "runtime/common/mem_arena.h"
+#include "runtime/common/object_pool.h"
 #include "runtime/ir/function.h"
 #include "runtime/ir/module.h"
 
@@ -13,7 +13,9 @@ namespace swift::runtime::ir {
 
 class HIRBlock;
 class HIRFunction;
+class HIRBuilder;
 struct HIRPools;
+struct HIRValue;
 
 struct HostGPR {
     static constexpr auto INVALID = u16(-1);
@@ -34,6 +36,7 @@ class DataContext {
 public:
     virtual u16 MaxBlockCount() = 0;
     virtual u16 MaxValueCount() = 0;
+    virtual u16 MaxLocalId() = 0;
 };
 
 class Edge {
@@ -70,32 +73,64 @@ struct ValueAllocated {
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+struct HIRUse {
+    Inst* inst;
+    u8 arg_idx;
+    IntrusiveListNode list_node{};
+
+    explicit HIRUse(Inst* inst, u8 arg_idx);
+};
+#pragma pack(pop)
+
+using HIRUseList = IntrusiveList<&HIRUse::list_node>;
+
 #pragma pack(push, 4)
 struct HIRValue {
     Value value;
     HIRBlock* block;
-    IntrusiveListNode list_node{};
     ValueAllocated allocated{};
+    HIRUseList uses{};
 
+    IntrusiveMapNode map_node{};
+
+    constexpr HIRValue() : value(), block(nullptr) {};
+    constexpr HIRValue(const Value& value) : value(value), block(nullptr){};
     explicit HIRValue(u16 id, const Value& value, HIRBlock* block);
+
+    void Use(Inst* inst, u8 idx);
+    void UnUse(Inst* inst, u8 idx);
+
+    // for rbtree compare
+    static NOINLINE int Compare(const HIRValue& lhs, const HIRValue& rhs) {
+        if (rhs.value.Def()->Id() > lhs.value.Def()->Id()) {
+            return 1;
+        } else if (rhs.value.Def()->Id() < lhs.value.Def()->Id()) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
 };
 #pragma pack(pop, 4)
 
 struct HIRLocal {
     Local local;
-    HIRValue *current_value{};
+    HIRValue* current_value{};
 };
 
-using HIRValueList = IntrusiveList<&HIRValue::list_node>;
+using HIRValueMap = IntrusiveMap<&HIRValue::map_node>;
 
 class HIRBlock : public DataContext {
     friend class HIRFunction;
+    friend class HIRValue;
 
 public:
-    explicit HIRBlock(Block* block);
+    explicit HIRBlock(Block* block, HIRValueMap& values, HIRPools& pools);
 
-    HIRValueList& GetHIRValues();
-    u16 GetOrderId();
+    void AppendInst(Inst* inst);
+    HIRValueMap& GetHIRValues();
+    [[nodiscard]] u16 GetOrderId() const;
 
     void AddOutgoingEdge(Edge* edge);
     void AddIncomingEdge(Edge* edge);
@@ -106,16 +141,20 @@ public:
 
     auto& GetOutgoingEdges() { return outgoing_edges; }
 
+    Block* GetBlock();
+    InstList& GetInstList();
+
     u16 MaxBlockCount() override;
     u16 MaxValueCount() override;
+    u16 MaxLocalId() override;
 
     IntrusiveListNode list_node;
 
 private:
     u16 order_id{};
     Block* block;
-    HIRValueList values{};
-    Vector<HIRLocal> locals{};
+    HIRPools& pools;
+    HIRValueMap& values;
     IntrusiveList<&Edge::outgoing_edges> outgoing_edges;
     IntrusiveList<&Edge::incoming_edges> incoming_edges;
 };
@@ -123,11 +162,13 @@ private:
 using HIRBlockList = IntrusiveList<&HIRBlock::list_node>;
 
 class HIRFunction : public DataContext {
+    friend class HIRBuilder;
+
 public:
     explicit HIRFunction(Function* function,
                          const Location& begin,
                          const Location& end,
-                         HIRPools &pools);
+                         HIRPools& pools);
 
     template <typename... Args> Inst* AppendInst(OpCode op, const Args&... args) {
         ASSERT(current_block);
@@ -139,7 +180,10 @@ public:
 
     void AppendBlock(Location start, Location end = {});
     void AppendInst(Inst* inst);
+    void DestroyHIRValue(HIRValue* value);
     HIRBlockList& GetHIRBlocks();
+    HIRValueMap& GetHIRValues();
+    HIRValue* GetHIRValue(const Value& value);
     void AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional = false);
     void RemoveEdge(Edge* edge);
     void MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right);
@@ -149,6 +193,7 @@ public:
 
     u16 MaxBlockCount() override;
     u16 MaxValueCount() override;
+    u16 MaxLocalId() override;
 
     IntrusiveListNode list_node;
 
@@ -157,14 +202,17 @@ private:
         u32 current_slot{0};
     } spill_stack{};
 
+    u16 order_id;
+    u16 max_local_id{};
     Function* function;
     Location begin;
     Location end;
     u16 block_order_id{};
     u16 value_order_id{};
-    HIRPools &pools;
+    HIRPools& pools;
 
     HIRBlockList blocks{};
+    HIRValueMap values{};
     HIRBlock* current_block{};
 };
 
@@ -176,6 +224,7 @@ struct HIRPools {
         blocks.ReleaseContents();
         values.ReleaseContents();
         edges.ReleaseContents();
+        uses.ReleaseContents();
     }
 
     explicit HIRPools(u32 func_cap = 1);
@@ -185,6 +234,7 @@ struct HIRPools {
     ObjectPool<HIRBlock, true> blocks;
     ObjectPool<HIRValue> values;
     ObjectPool<Edge> edges;
+    ObjectPool<HIRUse> uses;
 };
 
 class HIRBuilder {

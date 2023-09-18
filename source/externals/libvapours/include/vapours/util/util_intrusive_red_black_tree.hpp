@@ -63,6 +63,7 @@ namespace ams::util {
                 using RootType = freebsd::RBHead<IntrusiveRedBlackTreeNode>;
             private:
                 RootType m_root;
+                size_t m_size{};
             public:
                 template<bool Const>
                 class Iterator;
@@ -221,6 +222,7 @@ namespace ams::util {
                     auto cur  = std::addressof(*it);
                     auto next = GetNext(cur);
                     this->RemoveImpl(cur);
+                    m_size--;
                     return iterator(next);
                 }
         };
@@ -345,6 +347,7 @@ namespace ams::util {
 
             /* Define accessors using RB_* functions. */
             constexpr IntrusiveRedBlackTreeNode *InsertImpl(IntrusiveRedBlackTreeNode *node) {
+                m_impl.m_size++;
                 return freebsd::RB_INSERT(m_impl.m_root, node, CompareImpl);
             }
 
@@ -432,6 +435,10 @@ namespace ams::util {
                 return iterator(m_impl.erase(it.GetImplIterator()));
             }
 
+            constexpr ALWAYS_INLINE iterator erase(reference ref) {
+                return erase(iterator_to(ref));
+            }
+
             constexpr ALWAYS_INLINE iterator insert(reference ref) {
                 ImplType::pointer node = Traits::GetNode(std::addressof(ref));
                 this->InsertImpl(node);
@@ -460,6 +467,10 @@ namespace ams::util {
 
             constexpr ALWAYS_INLINE iterator find_existing_key(const_key_reference ref) const {
                 return iterator(this->FindExistingKeyImpl(ref));
+            }
+
+            constexpr ALWAYS_INLINE size_t size() {
+                return this->m_impl.m_size;
             }
     };
 

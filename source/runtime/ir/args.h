@@ -92,6 +92,8 @@ public:
 
     [[nodiscard]] Inst* Def() const { return inst; }
 
+    [[nodiscard]] bool Defined() const { return inst; }
+
     void SetType(ValueType type) const;
 
     [[nodiscard]] ValueType Type() const;
@@ -114,7 +116,7 @@ private:
 };
 
 struct Local {
-    u32 id{};
+    u16 id{};
     ValueType type{};
 };
 
@@ -294,6 +296,8 @@ public:
     [[nodiscard]] constexpr bool IsOperand() const { return value.type == ArgType::Operand; }
 
     [[nodiscard]] constexpr bool IsLambda() const { return value.type == ArgType::Lambda; }
+
+    [[nodiscard]] constexpr bool IsVoid() const { return value.type == ArgType::Void; }
 
     [[nodiscard]] ArgType GetType() const { return value.type; }
 

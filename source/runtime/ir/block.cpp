@@ -14,8 +14,23 @@ void Block::AppendInst(Inst* inst) {
     inst_list.push_back(*inst);
 }
 
+void Block::DestroyInst(Inst* inst) {
+    inst_list.erase(*inst);
+    delete inst;
+}
+
 void Block::SetEndLocation(Location end_) {
     this->end = end_;
+}
+
+InstList& Block::GetInstList() {
+    return inst_list;
+}
+
+Block::~Block() {
+    for (auto &inst : inst_list) {
+        DestroyInst(&inst);
+    }
 }
 
 }  // namespace swift::runtime::ir

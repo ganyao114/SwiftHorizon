@@ -41,6 +41,10 @@ add_library(swift_runtime STATIC
         ir/ir_meta.cpp
         ir/opts/dataflow_analysis_pass.cpp
         ir/opts/dataflow_analysis_pass.h
+        ir/opts/cfg_analysis_pass.cpp
+        ir/opts/cfg_analysis_pass.h
+        ir/opts/local_elimination_pass.cpp
+        ir/opts/local_elimination_pass.h
         backend/translate_table.h
         backend/interpreter.cpp
         backend/interpreter.h
@@ -49,9 +53,7 @@ add_library(swift_runtime STATIC
         backend/address_space.h
         backend/interface.cpp
         backend/entrypoint.h
-        ${RUNTIME_ARCH_SOURCE}
-        ir/opts/cfg_analysis_pass.cpp
-        ir/opts/cfg_analysis_pass.h)
+        ${RUNTIME_ARCH_SOURCE})
 
 
 find_package(Boost 1.57 REQUIRED)

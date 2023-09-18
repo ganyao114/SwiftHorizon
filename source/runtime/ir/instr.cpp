@@ -8,35 +8,63 @@ namespace swift::runtime::ir {
 
 Inst::Inst(OpCode code) : op_code(code) {}
 
-void Inst::SetArg(int index, const Arg& arg) { arguments[index] = arg; }
-
 Arg& Inst::ArgAt(int index) { return arguments[index]; }
 
-void Inst::SetArg(int index, const Void& arg) { arguments[index] = arg; }
+void Inst::SetArg(int index, const Void& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
 
 void Inst::SetArg(int index, const Value& arg) {
+    DestroyArg(index);
     arguments[index] = arg;
     Use(arg);
 }
 
-void Inst::SetArg(int index, const Imm& arg) { arguments[index] = arg; }
-void Inst::SetArg(int index, const Cond& arg) { arguments[index] = arg; }
-void Inst::SetArg(int index, const Flags& arg) { arguments[index] = arg; }
-void Inst::SetArg(int index, const Local& arg) { arguments[index] = arg; }
-void Inst::SetArg(int index, const Uniform& arg) { arguments[index] = arg; }
+void Inst::SetArg(int index, const Imm& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
+
+void Inst::SetArg(int index, const Cond& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
+
+void Inst::SetArg(int index, const Flags& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
+
+void Inst::SetArg(int index, const Local& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
+
+void Inst::SetArg(int index, const Uniform& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
 
 void Inst::SetArg(int index, const Lambda& arg) {
+    DestroyArg(index);
     arguments[index] = arg;
     if (arg.IsValue()) {
         Use(arg.GetValue());
     }
 }
 
-void Inst::SetArg(int index, const Operand::Op& arg) { arguments[index] = arg; }
+void Inst::SetArg(int index, const Operand::Op& arg) {
+    DestroyArg(index);
+    arguments[index] = arg;
+}
 
 void Inst::SetArg(int index, const Operand& arg) {
+    DestroyArg(index);
     arguments[index++] = arg;
+    DestroyArg(index);
     arguments[index++] = arg.left;
+    DestroyArg(index);
     arguments[index++] = arg.right;
     if (arg.left.type == ArgType::Value) {
         Use(arg.left.inner.value);
@@ -75,6 +103,10 @@ void Inst::UnUse(const Value& value) {
         insert_point->next_pseudo_inst = next_pseudo_inst;
         next_pseudo_inst = {};
     }
+}
+
+OpCode Inst::GetOp() {
+    return op_code;
 }
 
 void Inst::SetId(u16 id_) { this->id = id_; }
@@ -116,6 +148,15 @@ Inst* Inst::GetPseudoOperation(OpCode code) {
     return {};
 }
 
+void Inst::DestroyArg(u8 arg_idx) {
+    auto &arg = ArgAt(arg_idx);
+    if (arg.IsValue()) {
+        UnUse(arg.Get<Value>());
+    } else if (arg.IsLambda() && arg.Get<Lambda>().IsValue()) {
+        UnUse(arg.Get<Lambda>().GetValue());
+    }
+}
+
 void Inst::Validate(Inst* inst) {
     ASSERT(inst);
     ASSERT(inst->op_code >= OpCode::Void && inst->op_code < OpCode::COUNT);
@@ -153,6 +194,12 @@ void Inst::Validate(Inst* inst) {
                 abort();
                 break;
         }
+    }
+}
+
+Inst::~Inst() {
+    for (int i = 0; i < max_args; ++i) {
+        DestroyArg(i);
     }
 }
 

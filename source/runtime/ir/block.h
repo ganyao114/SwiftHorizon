@@ -29,8 +29,11 @@ public:
     }
 
     void AppendInst(Inst* inst);
+    void DestroyInst(Inst* inst);
 
     void SetEndLocation(Location location);
+
+    InstList &GetInstList();
 
 #define INST(name, ret, ...)                                                                      \
     template <typename... Args> ret name(const Args&... args) {                                    \
@@ -55,6 +58,8 @@ public:
             return 0;
         }
     }
+
+    virtual ~Block();
 
     union {
         NonTriviallyDummy dummy{};

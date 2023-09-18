@@ -528,6 +528,10 @@ namespace ams::util {
                 return iterator(m_impl.erase(pos.GetImplIterator()));
             }
 
+            constexpr ALWAYS_INLINE iterator erase(const_reference ref) {
+                return erase(iterator_to(ref));
+            }
+
             constexpr ALWAYS_INLINE void clear() {
                 m_impl.clear();
             }
