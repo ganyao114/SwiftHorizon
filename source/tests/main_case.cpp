@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "kernel/host/kernel_main.h"
 #include "runtime/ir/hir_builder.h"
+#include "runtime/ir/opts/cfg_analysis_pass.h"
 #include "runtime/ir/opts/local_elimination_pass.h"
 
 TEST_CASE("Test kernel-init") { swift::horizon::kernel::InitForKernel(); }
@@ -25,6 +26,8 @@ TEST_CASE("Test runtime-init") {
     auto local1 = hir_builder.LoadLocal(local_arg1);
     hir_builder.StoreLocal(local_arg2, local1);
     auto local2 = hir_builder.LoadLocal(local_arg2);
+    hir_builder.Return();
+    CFGAnalysisPass::Run(&hir_builder);
     LocalEliminationPass::Run(&hir_builder);
     assert(local2.Defined());
 }

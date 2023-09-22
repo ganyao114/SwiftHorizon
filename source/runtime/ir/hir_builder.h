@@ -39,8 +39,7 @@ public:
     virtual u16 MaxLocalId() = 0;
 };
 
-class Edge {
-public:
+struct Edge {
     enum Flags : u8 {
         CONDITIONAL = 1 << 0,
         DOMINATES = 1 << 1,
@@ -56,6 +55,15 @@ public:
 
     u8 flags{};
 };
+
+struct BackEdge {
+    HIRBlock *target;
+    IntrusiveListNode list_node{};
+
+    explicit BackEdge(HIRBlock *block) : target(block) {}
+};
+
+using BackEdgeList = IntrusiveList<&BackEdge::list_node>;
 
 #pragma pack(push, 1)
 struct ValueAllocated {
@@ -94,7 +102,7 @@ struct HIRValue {
 
     IntrusiveMapNode map_node{};
 
-    constexpr HIRValue() : value(), block(nullptr) {};
+    constexpr HIRValue() : value(), block(nullptr){};
     constexpr HIRValue(const Value& value) : value(value), block(nullptr){};
     explicit HIRValue(u16 id, const Value& value, HIRBlock* block);
 
@@ -121,6 +129,8 @@ struct HIRLocal {
 
 using HIRValueMap = IntrusiveMap<&HIRValue::map_node>;
 
+using HIRBlockVector = std::span<HIRBlock*>;
+
 class HIRBlock : public DataContext {
     friend class HIRFunction;
     friend class HIRValue;
@@ -134,12 +144,20 @@ public:
 
     void AddOutgoingEdge(Edge* edge);
     void AddIncomingEdge(Edge* edge);
+    void AddBackEdge(HIRBlock* back_edge);
     bool HasIncomingEdges();
     bool HasOutgoingEdges();
 
     auto& GetIncomingEdges() { return incoming_edges; }
-
     auto& GetOutgoingEdges() { return outgoing_edges; }
+
+    auto& GetPredecessors() { return predecessors; }
+    auto& GetSuccessors() { return successors; }
+
+    auto& GetBackEdges() { return back_edges; }
+
+    void SetDominator(HIRBlock *block_) { dominator = block_; };
+    auto GetDominator() { return dominator; };
 
     Block* GetBlock();
     InstList& GetInstList();
@@ -155,8 +173,12 @@ private:
     Block* block;
     HIRPools& pools;
     HIRValueMap& values;
-    IntrusiveList<&Edge::outgoing_edges> outgoing_edges;
-    IntrusiveList<&Edge::incoming_edges> incoming_edges;
+    IntrusiveList<&Edge::outgoing_edges> outgoing_edges{};
+    IntrusiveList<&Edge::incoming_edges> incoming_edges{};
+    HIRBlockVector predecessors;
+    HIRBlockVector successors;
+    BackEdgeList back_edges{};
+    HIRBlock* dominator{};
 };
 
 using HIRBlockList = IntrusiveList<&HIRBlock::list_node>;
@@ -178,18 +200,22 @@ public:
         return inst;
     }
 
-    void AppendBlock(Location start, Location end = {});
+    HIRBlock* AppendBlock(Location start, Location end = {});
     void AppendInst(Inst* inst);
     void DestroyHIRValue(HIRValue* value);
-    HIRBlockList& GetHIRBlocks();
+    HIRBlockVector& GetHIRBlocks();
+    HIRBlockList& GetHIRBlockList();
+    HIRBlockList& GetHIRBlocksRPO();
     HIRValueMap& GetHIRValues();
     HIRValue* GetHIRValue(const Value& value);
+    HIRPools& GetMemPool();
     void AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional = false);
     void RemoveEdge(Edge* edge);
     void MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right);
     bool SplitBlock(HIRBlock* new_block, HIRBlock* old_block);
 
     void EndBlock(Terminal terminal);
+    void EndFunction();
 
     u16 MaxBlockCount() override;
     u16 MaxValueCount() override;
@@ -202,7 +228,6 @@ private:
         u32 current_slot{0};
     } spill_stack{};
 
-    u16 order_id;
     u16 max_local_id{};
     Function* function;
     Location begin;
@@ -211,7 +236,10 @@ private:
     u16 value_order_id{};
     HIRPools& pools;
 
-    HIRBlockList blocks{};
+    HIRBlockVector blocks{};
+    HIRBlockList block_list{};
+    // Reverse Post Order
+    HIRBlockList blocks_rpo{};
     HIRValueMap values{};
     HIRBlock* current_block{};
 };
@@ -229,6 +257,10 @@ struct HIRPools {
 
     explicit HIRPools(u32 func_cap = 1);
 
+    HIRBlockVector CreateBlockVector(size_t size) {
+        return {mem_arena.CreateArray<HIRBlock*>(size), size};
+    }
+
     MemArena mem_arena;
     ObjectPool<HIRFunction, true> functions;
     ObjectPool<HIRBlock, true> blocks;
@@ -239,6 +271,16 @@ struct HIRPools {
 
 class HIRBuilder {
 public:
+    struct ElseThen {
+        HIRBlock* else_;
+        HIRBlock* then_;
+    };
+
+    struct CaseBlock {
+        Imm case_{0u};
+        HIRBlock* then_{};
+    };
+
     explicit HIRBuilder(u32 func_cap = 1);
 
     void AppendFunction(Location start, Location end = {});
@@ -254,13 +296,17 @@ public:
 
     void SetLocation(Location location);
 
-    void If(const terminal::If& if_);
+    ElseThen If(const terminal::If& if_);
 
-    void Switch(const terminal::Switch& switch_);
+    Vector<CaseBlock> Switch(const terminal::Switch& switch_);
 
-    void LinkBlock(const terminal::LinkBlock& switch_);
+    HIRBlock* LinkBlock(const terminal::LinkBlock& switch_);
+
+    void Return();
 
 private:
+    Location GetNextLocation(const Terminal& term);
+
     HIRPools pools;
     HIRFunctionList hir_functions{};
     Location current_location;

@@ -9,30 +9,12 @@
 #include "fmt/format.h"
 #include "runtime/common/logging.h"
 #include "runtime/common/slab_alloc.h"
+#include "runtime/ir/opcodes.h"
 
 namespace swift::runtime::ir {
 
 class Block;
 class Inst;
-
-enum class OpCode : u8 {
-    Void = 0,
-#define INST(OP, ...) OP,
-#include "ir.inc"
-#undef INST
-    BASE_COUNT,
-    SetLocation,
-    COUNT
-};
-
-struct IRMeta {
-    const OpCode op_code;
-    const char* name;
-    const ArgType return_type;
-    const std::vector<ArgType> arg_types;
-};
-
-const IRMeta& GetIRMetaInfo(OpCode op_code);
 
 template <typename T>
 concept InstAllocator = requires(T allocator, Inst* inst, OpCode code) {

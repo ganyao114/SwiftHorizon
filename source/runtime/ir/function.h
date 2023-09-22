@@ -21,6 +21,7 @@ public:
         IntrusiveListNode list_node;
     };
 private:
+    u32 id{};
     Location location;
     BlockMap blocks{};
 };

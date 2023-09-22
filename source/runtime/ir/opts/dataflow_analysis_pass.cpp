@@ -15,11 +15,10 @@ void DataflowAnalysisPass::Run(HIRBuilder* hir_builder) {
 void DataflowAnalysisPass::Run(HIRFunction* hir_function) {
     auto &hir_blocks = hir_function->GetHIRBlocks();
     StackVector<BitVector, 16> incoming_bitvectors{hir_function->MaxBlockCount()};
-    for (auto &hir_block : hir_blocks) {
-        auto &values = hir_block.GetHIRValues();
-        incoming_bitvectors[hir_block.GetOrderId()] = BitVector{values.size()};
+    for (auto hir_block : hir_blocks) {
+        auto &values = hir_block->GetHIRValues();
+        incoming_bitvectors[hir_block->GetOrderId()] = BitVector{values.size()};
     }
-
 }
 
 }  // namespace swift::runtime::ir

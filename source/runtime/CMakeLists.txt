@@ -24,6 +24,8 @@ add_library(swift_runtime STATIC
         common/logging.cpp
         ir/args.cpp
         ir/args.h
+        ir/ir_types.h
+        ir/opcodes.h
         ir/location.cpp
         ir/location.h
         ir/instr.cpp

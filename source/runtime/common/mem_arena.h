@@ -15,9 +15,13 @@ public:
     }
 
     template <typename T, typename... Args>
-        requires std::is_constructible_v<T, Args...> && (!std::is_destructible_v<T>)
+        requires std::is_constructible_v<T, Args...>
     T* Create(Args&&... args) {
         return std::construct_at(Memory<T>(), std::forward<Args>(args)...);
+    }
+
+    template <typename T> T* CreateArray(size_t size) {
+        return reinterpret_cast<T*>(Memory(sizeof(T) * size));
     }
 
 private:
@@ -46,11 +50,15 @@ private:
         Vector<u8> storage;
     };
 
-    template <typename T> [[nodiscard]] T* Memory() {
-        Chunk* const chunk{FreeChunk(sizeof(T))};
+    [[nodiscard]] void* Memory(size_t size) {
+        Chunk* const chunk{FreeChunk(size)};
         auto result = &chunk->storage[chunk->used_size];
-        chunk->used_size += sizeof(T);
-        return reinterpret_cast<T*>(result);
+        chunk->used_size += size;
+        return reinterpret_cast<void*>(result);
+    }
+
+    template <typename T> [[nodiscard]] T* Memory() {
+        return reinterpret_cast<T*>(Memory(sizeof(T)));
     }
 
     [[nodiscard]] Chunk* FreeChunk(size_t size) {

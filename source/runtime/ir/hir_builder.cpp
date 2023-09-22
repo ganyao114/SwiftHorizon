@@ -4,6 +4,7 @@
 
 #include <utility>
 #include "hir_builder.h"
+#include "runtime/common/variant_util.h"
 
 namespace swift::runtime::ir {
 
@@ -21,6 +22,11 @@ u16 HIRBlock::GetOrderId() const { return order_id; }
 void HIRBlock::AddIncomingEdge(Edge* edge) { incoming_edges.push_back(*edge); }
 
 void HIRBlock::AddOutgoingEdge(Edge* edge) { outgoing_edges.push_back(*edge); }
+
+void HIRBlock::AddBackEdge(HIRBlock* target) {
+    auto back_edge = pools.mem_arena.Create<BackEdge>(target);
+    back_edges.push_back(*back_edge);
+}
 
 bool HIRBlock::HasIncomingEdges() { return !incoming_edges.empty(); }
 
@@ -66,12 +72,13 @@ HIRFunction::HIRFunction(Function* function,
     AppendBlock(begin);
 }
 
-void HIRFunction::AppendBlock(Location start, Location end_) {
+HIRBlock* HIRFunction::AppendBlock(Location start, Location end_) {
     auto hir_block = pools.blocks.Create(new Block(start), values, pools);
     hir_block->block->SetEndLocation(end_);
     hir_block->order_id = block_order_id++;
-    blocks.push_back(*hir_block);
+    block_list.push_back(*hir_block);
     current_block = hir_block;
+    return hir_block;
 }
 
 void HIRFunction::AppendInst(Inst* inst) {
@@ -107,10 +114,13 @@ void HIRFunction::AppendInst(Inst* inst) {
 
 void HIRFunction::DestroyHIRValue(HIRValue* value) {
     values.erase(*value);
-    value->block->block->DestroyInst(value->value.Def());
 }
 
-HIRBlockList& HIRFunction::GetHIRBlocks() { return blocks; }
+HIRBlockVector& HIRFunction::GetHIRBlocks() { return blocks; }
+
+HIRBlockList& HIRFunction::GetHIRBlockList() { return block_list; }
+
+HIRBlockList& HIRFunction::GetHIRBlocksRPO() { return blocks_rpo; }
 
 HIRValueMap& HIRFunction::GetHIRValues() { return values; }
 
@@ -121,6 +131,8 @@ HIRValue* HIRFunction::GetHIRValue(const Value& value) {
         return {};
     }
 }
+
+HIRPools& HIRFunction::GetMemPool() { return pools; }
 
 void HIRFunction::AddEdge(HIRBlock* src, HIRBlock* dest, bool conditional) {
     ASSERT(src && dest);
@@ -149,8 +161,33 @@ void HIRFunction::EndBlock(Terminal terminal) {
     current_block = {};
 }
 
-u16 HIRFunction::MaxBlockCount() { return block_order_id + 1; }
-u16 HIRFunction::MaxValueCount() { return value_order_id + 1; }
+void HIRFunction::EndFunction() {
+    EndBlock(terminal::PopRSBHint{});
+    blocks = pools.CreateBlockVector(MaxBlockCount());
+    for (auto& block : block_list) {
+        // Function vector
+        blocks[block.order_id] = &block;
+
+        // Block successes predecessors
+        auto &incoming_edges = block.GetIncomingEdges();
+        auto &outgoing_edges = block.GetOutgoingEdges();
+        block.predecessors = pools.CreateBlockVector(incoming_edges.size());
+        block.successors = pools.CreateBlockVector(outgoing_edges.size());
+
+        u16 incoming_index{0};
+        for (auto &edge : incoming_edges) {
+            block.predecessors[incoming_index++] = edge.src_block;
+        }
+
+        u16 outgoing_index{0};
+        for (auto &edge : outgoing_edges) {
+            block.successors[outgoing_index++] = edge.dest_block;
+        }
+    }
+}
+
+u16 HIRFunction::MaxBlockCount() { return block_order_id; }
+u16 HIRFunction::MaxValueCount() { return value_order_id; }
 u16 HIRFunction::MaxLocalId() { return max_local_id; }
 
 HIRPools::HIRPools(u32 func_cap)
@@ -172,19 +209,61 @@ HIRFunctionList& HIRBuilder::GetHIRFunctions() { return hir_functions; }
 
 void HIRBuilder::SetLocation(Location location) { current_location = location; }
 
-void HIRBuilder::If(const terminal::If& if_) {
-    ASSERT_MSG(!current_function, "current function is null!");
+HIRBuilder::ElseThen HIRBuilder::If(const terminal::If& if_) {
+    ASSERT_MSG(current_function, "current function is null!");
     current_function->EndBlock(if_);
+    auto pre_block = current_function->current_block;
+    auto else_ = GetNextLocation(if_.else_);
+    auto then_ = GetNextLocation(if_.then_);
+    auto else_block = current_function->AppendBlock(else_);
+    auto then_block = current_function->AppendBlock(then_);
+    current_function->AddEdge(pre_block, then_block, true);
+    current_function->AddEdge(pre_block, else_block, true);
+    return {else_block, then_block};
 }
 
-void HIRBuilder::Switch(const terminal::Switch& switch_) {
-    ASSERT_MSG(!current_function, "current function is null!");
+Vector<HIRBuilder::CaseBlock> HIRBuilder::Switch(const terminal::Switch& switch_) {
+    ASSERT_MSG(current_function, "current function is null!");
     current_function->EndBlock(switch_);
+    auto case_size = switch_.cases.size();
+    auto pre_block = current_function->current_block;
+    Vector<HIRBuilder::CaseBlock> result{case_size};
+    for (int i = 0; i < case_size; i++) {
+        auto next_location = GetNextLocation(switch_.cases[i].then);
+        auto next_block = current_function->AppendBlock(next_location);
+        current_function->AddEdge(pre_block, next_block, true);
+        result[i] = {switch_.cases[i].case_value, next_block};
+    }
+    return result;
 }
 
-void HIRBuilder::LinkBlock(const terminal::LinkBlock& link) {
-    ASSERT_MSG(!current_function, "current function is null!");
+HIRBlock* HIRBuilder::LinkBlock(const terminal::LinkBlock& link) {
+    ASSERT_MSG(current_function, "current function is null!");
     current_function->EndBlock(link);
+    auto pre_block = current_function->current_block;
+    auto next_block = current_function->AppendBlock(link.next);
+    current_function->AddEdge(pre_block, next_block, false);
+    return next_block;
+}
+
+void HIRBuilder::Return() {
+    ASSERT_MSG(current_function, "current function is null!");
+    current_function->EndFunction();
+    current_function = {};
+}
+
+Location HIRBuilder::GetNextLocation(const terminal::Terminal& term) {
+    return VisitVariant<Location>(term, [](auto x) -> Location {
+        using T = std::decay_t<decltype(x)>;
+        if constexpr (std::is_same_v<T, terminal::LinkBlock>) {
+            return x.next;
+        } else if constexpr (std::is_same_v<T, terminal::LinkBlockFast>) {
+            return x.next;
+        } else {
+            ASSERT_MSG(false, "Invalid terminal");
+            return {};
+        }
+    });
 }
 
 }  // namespace swift::runtime::ir

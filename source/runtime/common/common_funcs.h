@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <type_traits>
+#include "logging.h"
 
 namespace swift::runtime {
 
@@ -77,6 +78,15 @@ protected:
 constexpr bool EndWith(std::string_view str, std::string_view suffix) {
     return str.size() >= suffix.size() &&
            0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+}
+
+template <typename Container, typename T>
+bool ContainsElement(const Container& container, const T& value, size_t start_pos = 0u) {
+    ASSERT(start_pos < container.size());
+    auto start = container.begin();
+    std::advance(start, start_pos);
+    auto it = std::find(start, container.end(), value);
+    return it != container.end();
 }
 
 }

@@ -10,34 +10,14 @@
 #endif
 
 #include "runtime/common/common_funcs.h"
+#include "runtime/common/logging.h"
 #include "runtime/common/types.h"
+#include "runtime/ir/ir_types.h"
 
 namespace swift::runtime::ir {
 
 class Inst;
 class Arg;
-
-enum class ArgType : u8 { Void = 0, Value, Imm, Uniform, Local, Cond, Flags, Operand, Lambda };
-enum class ValueType : u8 {
-    VOID = 0,
-    BOOL,
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-    S8,
-    S16,
-    S32,
-    S64,
-    S128,
-    V8,
-    V16,
-    V32,
-    V64,
-    V128,
-    V256
-};
 
 enum class Cond : u8 {
     EQ = 0,
@@ -101,6 +81,36 @@ public:
 private:
     Inst* inst{};
 };
+
+template<ValueType type_>
+class TypedValue final : public Value {
+public:
+    TypedValue() = default;
+
+    template<ValueType other_type>
+    /* implicit */ TypedValue(const TypedValue<other_type>& value)
+            : Value(value) {
+        ASSERT(value.Type() != type_);
+    }
+
+    explicit TypedValue(const Value& value)
+            : Value(value) {
+        ASSERT(value.Type() != type_);
+    }
+
+    explicit TypedValue(Inst* inst)
+            : TypedValue(Value(inst)) {
+        ASSERT(Type() != type_);
+    }
+};
+
+using BOOL = TypedValue<ValueType::BOOL>;
+using U1 = TypedValue<ValueType::BOOL>;
+using U8 = TypedValue<ValueType::U8>;
+using U16 = TypedValue<ValueType::U16>;
+using U32 = TypedValue<ValueType::U32>;
+using U64 = TypedValue<ValueType::U64>;
+using U128 = TypedValue<ValueType::U128>;
 
 // Uniform buffer
 class Uniform {

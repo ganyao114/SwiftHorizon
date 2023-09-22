@@ -44,9 +44,9 @@ using Terminal = boost::variant<
         boost::recursive_wrapper<CheckHalt>>;
 
 struct If {
-    If(Value cond, Terminal then_, Terminal else_)
+    If(BOOL cond, Terminal then_, Terminal else_)
             : cond(cond), then_(std::move(then_)), else_(std::move(else_)) {}
-    Value cond;
+    BOOL cond;
     Terminal then_;
     Terminal else_;
 };
@@ -57,10 +57,10 @@ struct Switch {
         Terminal then;
     };
 
-    Switch(Value value, const std::span<Case> &cases)
+    Switch(Value value, const Vector<Case> &cases)
             : value(value), cases(cases) {}
     Value value;
-    std::span<Case> cases;
+    Vector<Case> cases;
 };
 
 struct CheckHalt {

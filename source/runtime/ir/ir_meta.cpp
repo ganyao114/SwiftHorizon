@@ -2,11 +2,16 @@
 // Created by 甘尧 on 2023/9/8.
 //
 
-
-#include "instr.h"
+#include "runtime/common/logging.h"
+#include "runtime/ir/ir_types.h"
 
 namespace swift::runtime::ir {
 
+constexpr ArgType BOOL = ArgType::Value;
+constexpr ArgType U8 = ArgType::Value;
+constexpr ArgType U16 = ArgType::Value;
+constexpr ArgType U32 = ArgType::Value;
+constexpr ArgType U64 = ArgType::Value;
 constexpr ArgType Void = ArgType::Void;
 constexpr ArgType Value = ArgType::Value;
 constexpr ArgType Imm = ArgType::Imm;
