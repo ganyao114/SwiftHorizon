@@ -95,12 +95,12 @@ public:
 
     explicit TypedValue(const Value& value)
             : Value(value) {
-        ASSERT(value.Type() != type_);
+        SetType(type_);
     }
 
     explicit TypedValue(Inst* inst)
             : TypedValue(Value(inst)) {
-        ASSERT(Type() != type_);
+        SetType(type_);
     }
 };
 

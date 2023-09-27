@@ -59,5 +59,5 @@ add_library(swift_runtime STATIC
 
 
 find_package(Boost 1.57 REQUIRED)
-target_link_libraries(swift_runtime PUBLIC base vapours Boost::boost vixl)
+target_link_libraries(swift_runtime PUBLIC base vapours Boost::boost vixl dlmalloc)
 add_library(swift::runtime ALIAS swift_runtime)
