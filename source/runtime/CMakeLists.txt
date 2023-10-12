@@ -22,6 +22,11 @@ add_library(swift_runtime STATIC
         common/variant_util.h
         common/logging.h
         common/logging.cpp
+        common/virtual_vector.cpp
+        common/virtual_vector.h
+        common/file.cpp
+        common/file.h
+        common/bit_fields.h
         ir/args.cpp
         ir/args.h
         ir/ir_types.h
@@ -55,6 +60,12 @@ add_library(swift_runtime STATIC
         backend/address_space.h
         backend/interface.cpp
         backend/entrypoint.h
+        backend/code_cache.cpp
+        backend/code_cache.h
+        backend/host_isa.cpp
+        backend/host_isa.h
+        backend/mem_map.cpp
+        backend/mem_map.h
         ${RUNTIME_ARCH_SOURCE})
 
 

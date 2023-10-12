@@ -1,4 +1,5 @@
-add_definitions(-DONLY_MSPACES=1)
 add_library(dlmalloc STATIC
-    malloc.h
-    malloc.c)
+        dlmalloc/malloc.h
+        dlmalloc/malloc.c)
+
+target_include_directories(dlmalloc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

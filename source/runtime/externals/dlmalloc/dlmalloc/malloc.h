@@ -23,6 +23,9 @@
 #ifndef MALLOC_280_H
 #define MALLOC_280_H
 
+#define DONLY_MSPACES 1
+#define MSPACES 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif

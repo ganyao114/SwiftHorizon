@@ -520,6 +520,8 @@ MAX_RELEASE_CHECK_RATE   default: 4095 unless not HAVE_MMAP
   disable, set to MAX_SIZE_T. This may lead to a very slight speed
   improvement at the expense of carrying around more memory.
 */
+#define DONLY_MSPACES 1
+#define MSPACES 1
 
 /* Version identifier to allow people to support multiple versions */
 #ifndef DLMALLOC_VERSION

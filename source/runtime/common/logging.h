@@ -41,7 +41,7 @@ void AssertFailed(const std::string& message);
 #else
 #define LOG(level, ...)                                                                            \
     swift::runtime::log::LogMessage(                                                               \
-            base::log::Level::level, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+            swift::runtime::log::Level::level, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
 #endif
 
 #define LOG_INFO(...) LOG(Info, __VA_ARGS__)

@@ -11,7 +11,8 @@ INST(CompareAndSwap, Value, Value, Value, Value)
 
 // Help
 INST(CallLambda, Value, Lambda, Value, Value, Value)
-INST(CallFunction, Lambda, Value)
+INST(CallLocation, Value, Lambda)
+INST(CallDynamic, Value, Lambda)
 INST(AddPhi, Value, Value, Value)
 
 // Imm

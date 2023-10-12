@@ -164,8 +164,12 @@ void Inst::Validate(Inst* inst) {
         ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallLambda arg 0 must be Lambda type!");
         return;
     }
-    if (inst->op_code == OpCode::CallFunction) {
-        ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallFunction arg 0 must be Lambda type!");
+    if (inst->op_code == OpCode::CallLocation) {
+        ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallLocation arg 0 must be Lambda type!");
+        return;
+    }
+    if (inst->op_code == OpCode::CallDynamic) {
+        ASSERT_MSG(inst->ArgAt(0).IsLambda(), "CallDynamic arg 0 must be Lambda type!");
         return;
     }
     if (inst->op_code > OpCode::Void && inst->op_code < OpCode::BASE_COUNT) {
@@ -191,7 +195,7 @@ void Inst::Validate(Inst* inst) {
                 break;
             }
             default:
-                abort();
+                ASSERT_MSG(false, "Unk Instr {}!", inst->op_code);
                 break;
         }
     }
