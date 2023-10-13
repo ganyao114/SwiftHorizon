@@ -8,6 +8,7 @@
 #include "runtime/common/object_pool.h"
 #include "runtime/ir/function.h"
 #include "runtime/ir/module.h"
+#include "runtime/ir/host_reg.h"
 
 namespace swift::runtime::ir {
 
@@ -16,21 +17,6 @@ class HIRFunction;
 class HIRBuilder;
 struct HIRPools;
 struct HIRValue;
-
-struct HostGPR {
-    static constexpr auto INVALID = u16(-1);
-    u16 id{INVALID};
-};
-
-struct HostFPR {
-    static constexpr auto INVALID = u16(-1);
-    u16 id{INVALID};
-};
-
-struct SpillSlot {
-    static constexpr auto INVALID = u16(-1);
-    u16 offset{INVALID};
-};
 
 class DataContext {
 public:

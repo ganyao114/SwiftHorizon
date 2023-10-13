@@ -67,10 +67,10 @@ void Inst::SetArg(int index, const Operand& arg) {
     DestroyArg(index);
     arguments[index++] = arg.right;
     if (arg.left.type == ArgType::Value) {
-        Use(arg.left.inner.value);
+        Use(arg.left.value);
     }
     if (arg.right.type == ArgType::Value) {
-        Use(arg.right.inner.value);
+        Use(arg.right.value);
     }
 }
 

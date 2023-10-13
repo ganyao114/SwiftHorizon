@@ -252,6 +252,6 @@ void MemMap::Free(u32 offset, u32 size) { impl->Free(offset, size); }
 
 u8* MemMap::GetMemory() { return impl->GetBackend(); }
 
-u32 MemMap::GetSize() { return arena_size; }
+u32 MemMap::GetSize() const { return arena_size; }
 
 }  // namespace swift::runtime::backend

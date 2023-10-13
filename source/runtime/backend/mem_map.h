@@ -11,7 +11,7 @@ namespace swift::runtime::backend {
 void ClearICache(void *start, size_t size);
 void ClearDCache(void *start, size_t size);
 
-class MemMap : public DeleteCopyAndMove {
+class MemMap : DeleteCopyAndMove {
 public:
     enum Mode {
         None = 0,
@@ -32,7 +32,7 @@ public:
     void Unmap(void* mem, u32 size);
     void Free(u32 offset, u32 size);
     u8* GetMemory();
-    u32 GetSize();
+    u32 GetSize() const;
 
 private:
     class Impl;

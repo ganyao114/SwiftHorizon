@@ -47,3 +47,5 @@ add_library(vixl STATIC
         ${VIXL_SOURCES}
         ${VIXL_AARCH32}
         ${VIXL_AARCH64})
+
+target_include_directories(vixl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

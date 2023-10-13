@@ -3,9 +3,13 @@ add_subdirectory(externals)
 
 if ("arm64" IN_LIST ARCHITECTURE)
     set(RUNTIME_ARCH_SOURCE
+            backend/translator.cpp
+            backend/translator.h
             backend/arm64/context.S
             backend/arm64/jit/jit_context.cpp
-            backend/arm64/jit/jit_context.h)
+            backend/arm64/jit/jit_context.h
+            backend/arm64/jit/translator.cpp
+            backend/arm64/jit/translator.h)
 else ()
     set(RUNTIME_ARCH_SOURCE)
 endif ()
@@ -46,6 +50,7 @@ add_library(swift_runtime STATIC
         ir/hir_builder.cpp
         ir/hir_builder.h
         ir/ir_meta.cpp
+        ir/host_reg.h
         ir/opts/dataflow_analysis_pass.cpp
         ir/opts/dataflow_analysis_pass.h
         ir/opts/cfg_analysis_pass.cpp
@@ -66,6 +71,8 @@ add_library(swift_runtime STATIC
         backend/host_isa.h
         backend/mem_map.cpp
         backend/mem_map.h
+        backend/reg_alloc.cpp
+        backend/reg_alloc.h
         ${RUNTIME_ARCH_SOURCE})
 
 

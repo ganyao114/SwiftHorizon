@@ -197,64 +197,64 @@ struct ArgClass {
         Uniform uniform;
         Lambda lambda;
         Flags flags;
-    } inner{};
+    };
 
     explicit ArgClass() : type(ArgType::Void) {}
 
     explicit ArgClass(const Value& v) {
-        inner.value = v;
+        value = v;
         type = ArgType::Value;
     }
 
     explicit ArgClass(const Imm& v) {
-        inner.imm = v;
+        imm = v;
         type = ArgType::Imm;
     }
 
     explicit ArgClass(const OperandOp& v) {
-        inner.operand = v;
+        operand = v;
         type = ArgType::Operand;
     }
 
     explicit ArgClass(const Local& v) {
-        inner.local = v;
+        local = v;
         type = ArgType::Local;
     }
 
     explicit ArgClass(const Uniform& v) {
-        inner.uniform = v;
+        uniform = v;
         type = ArgType::Uniform;
     }
 
     explicit ArgClass(const Lambda& v) {
-        inner.lambda = v;
+        lambda = v;
         type = ArgType::Lambda;
     }
 
     explicit ArgClass(const Cond& v) {
-        inner.cond = v;
+        cond = v;
         type = ArgType::Cond;
     }
 
     explicit ArgClass(const Flags& v) {
-        inner.flags = v;
+        flags = v;
         type = ArgType::Flags;
     }
 
     constexpr ArgClass& operator=(const Uniform& v) {
-        inner.uniform = v;
+        uniform = v;
         type = ArgType::Uniform;
         return *this;
     }
 
     constexpr ArgClass& operator=(const Lambda& v) {
-        inner.lambda = v;
+        lambda = v;
         type = ArgType::Lambda;
         return *this;
     }
 
     constexpr ArgClass& operator=(const Imm& v) {
-        inner.imm = v;
+        imm = v;
         type = ArgType::Imm;
         return *this;
     }
@@ -275,6 +275,14 @@ public:
     explicit Operand(const Value& left, const Value& right, Op op = {});
 
     [[nodiscard]] Op GetOp() const;
+
+    const Type GetLeft() const {
+        return left;
+    }
+
+    const Type GetRight() const {
+        return right;
+    }
 
 private:
     Op op{};
@@ -314,28 +322,28 @@ public:
     template <typename T> constexpr T& Get() {
         if constexpr (std::is_same<T, Value>::value) {
             assert(value.type == ArgType::Value);
-            return value.inner.value;
+            return value.value;
         } else if constexpr (std::is_same<T, Imm>::value) {
             assert(value.type == ArgType::Imm);
-            return value.inner.imm;
+            return value.imm;
         } else if constexpr (std::is_same<T, Local>::value) {
             assert(value.type == ArgType::Local);
-            return value.inner.local;
+            return value.local;
         } else if constexpr (std::is_same<T, Uniform>::value) {
             assert(value.type == ArgType::Uniform);
-            return value.inner.uniform;
+            return value.uniform;
         } else if constexpr (std::is_same<T, Cond>::value) {
             assert(value.type == ArgType::Cond);
-            return value.inner.cond;
+            return value.cond;
         } else if constexpr (std::is_same<T, OperandOp>::value) {
             assert(value.type == ArgType::Operand);
-            return value.inner.operand;
+            return value.operand;
         } else if constexpr (std::is_same<T, Lambda>::value) {
             assert(value.type == ArgType::Lambda);
-            return value.inner.lambda;
+            return value.lambda;
         } else if constexpr (std::is_same<T, Flags>::value) {
             assert(value.type == ArgType::Flags);
-            return value.inner.flags;
+            return value.flags;
         } else {
             assert(0);
         }
