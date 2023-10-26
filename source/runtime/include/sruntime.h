@@ -9,11 +9,21 @@
 
 namespace swift::runtime {
 
+using LocationDescriptor = size_t;
+
 class Instance {};
 
 class Interface {
 public:
     explicit Interface(Config config);
+
+    u32 Run();
+
+    u32 Step();
+
+    void SetLocation(LocationDescriptor location);
+
+    LocationDescriptor GetLocation();
 
 private:
     struct Impl;

@@ -73,6 +73,7 @@ add_library(swift_runtime STATIC
         backend/mem_map.h
         backend/reg_alloc.cpp
         backend/reg_alloc.h
+        backend/jit_code.h
         ${RUNTIME_ARCH_SOURCE})
 
 
