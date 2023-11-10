@@ -15,7 +15,18 @@ HIRBlock::HIRBlock(Block* block, HIRValueMap& values, HIRPools& pools)
 
 void HIRBlock::AppendInst(Inst* inst) { block->AppendInst(inst); }
 
+HIRPhi* HIRBlock::AppendPhi() {
+    auto result = block->AddPhi();
+    auto value = pools.values.Create(function->value_order_id++, result, this);
+    values.insert(*value);
+    auto phi = pools.mem_arena.Create<HIRPhi>(pools, value);
+    phis.push_back(*phi);
+    return phi;
+}
+
 HIRValueMap& HIRBlock::GetHIRValues() { return values; }
+
+const HIRPhiList& HIRBlock::GetPhis() { return phis; }
 
 u16 HIRBlock::GetOrderId() const { return order_id; }
 
@@ -62,6 +73,14 @@ void HIRValue::UnUse(Inst* inst, u8 idx) {
     }
 }
 
+HIRPhi::HIRPhi(HIRPools& pools, HIRValue* value) : pools(pools), value(value) {}
+
+void HIRPhi::AddInput(HIRValue* input) {
+    auto node = pools.mem_arena.Create<PhiNode>(input);
+    inputs.push_back(*node);
+    input->Use(value->value.Def(), HIRUse::USE_PHI);
+}
+
 HIRUse::HIRUse(Inst* inst, u8 arg_idx) : inst(inst), arg_idx(arg_idx) {}
 
 HIRFunction::HIRFunction(Function* function,
@@ -73,10 +92,8 @@ HIRFunction::HIRFunction(Function* function,
 }
 
 HIRBlock* HIRFunction::AppendBlock(Location start, Location end_) {
-    auto hir_block = pools.blocks.Create(new Block(start), values, pools);
+    auto hir_block = CreateOrGetBlock(start);
     hir_block->block->SetEndLocation(end_);
-    hir_block->order_id = block_order_id++;
-    block_list.push_back(*hir_block);
     current_block = hir_block;
     return hir_block;
 }
@@ -112,9 +129,9 @@ void HIRFunction::AppendInst(Inst* inst) {
     }
 }
 
-void HIRFunction::DestroyHIRValue(HIRValue* value) {
-    values.erase(*value);
-}
+void HIRFunction::DestroyHIRValue(HIRValue* value) { values.erase(*value); }
+
+HIRBlock* HIRFunction::GetCurrentBlock() { return current_block; }
 
 HIRBlockVector& HIRFunction::GetHIRBlocks() { return blocks; }
 
@@ -156,6 +173,18 @@ void HIRFunction::MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right) {}
 
 bool HIRFunction::SplitBlock(HIRBlock* new_block, HIRBlock* old_block) { return false; }
 
+void HIRFunction::IdByRPO() {
+    u32 cur_value_id{0};
+    for (auto& block : GetHIRBlocksRPO()) {
+        StackVector<HIRValue*, 32> block_values{block.GetHIRValues().size()};
+        for (auto& value : block.GetHIRValues()) {
+            if (auto def = value.value.Def(); def) {
+                def->SetId(cur_value_id++);
+            }
+        }
+    }
+}
+
 void HIRFunction::EndBlock(Terminal terminal) {
     current_block->block->SetTerminal(std::move(terminal));
     current_block = {};
@@ -169,18 +198,18 @@ void HIRFunction::EndFunction() {
         blocks[block.order_id] = &block;
 
         // Block successes predecessors
-        auto &incoming_edges = block.GetIncomingEdges();
-        auto &outgoing_edges = block.GetOutgoingEdges();
+        auto& incoming_edges = block.GetIncomingEdges();
+        auto& outgoing_edges = block.GetOutgoingEdges();
         block.predecessors = pools.CreateBlockVector(incoming_edges.size());
         block.successors = pools.CreateBlockVector(outgoing_edges.size());
 
         u16 incoming_index{0};
-        for (auto &edge : incoming_edges) {
+        for (auto& edge : incoming_edges) {
             block.predecessors[incoming_index++] = edge.src_block;
         }
 
         u16 outgoing_index{0};
-        for (auto &edge : outgoing_edges) {
+        for (auto& edge : outgoing_edges) {
             block.successors[outgoing_index++] = edge.dest_block;
         }
     }
@@ -189,6 +218,20 @@ void HIRFunction::EndFunction() {
 u16 HIRFunction::MaxBlockCount() { return block_order_id; }
 u16 HIRFunction::MaxValueCount() { return value_order_id; }
 u16 HIRFunction::MaxLocalId() { return max_local_id; }
+
+HIRBlock* HIRFunction::CreateOrGetBlock(Location location) {
+    auto itr = std::find_if(block_list.begin(), block_list.end(), [location] (auto &block) -> auto {
+        return block.GetBlock()->GetStartLocation() == location;
+    });
+    if (itr != block_list.end()) {
+        return itr.operator->();
+    }
+    auto hir_block = pools.blocks.Create(new Block(location), values, pools);
+    hir_block->order_id = block_order_id++;
+    hir_block->function = this;
+    block_list.push_back(*hir_block);
+    return hir_block;
+}
 
 HIRPools::HIRPools(u32 func_cap)
         : functions(func_cap)
@@ -200,9 +243,10 @@ HIRPools::HIRPools(u32 func_cap)
 
 HIRBuilder::HIRBuilder(u32 func_cap) : pools(func_cap) {}
 
-void HIRBuilder::AppendFunction(Location start, Location end) {
+HIRFunction* HIRBuilder::AppendFunction(Location start, Location end) {
     current_function = pools.functions.Create(new Function(start), start, end, pools);
     hir_functions.push_back(*current_function);
+    return current_function;
 }
 
 HIRFunctionList& HIRBuilder::GetHIRFunctions() { return hir_functions; }
@@ -211,8 +255,8 @@ void HIRBuilder::SetLocation(Location location) { current_location = location; }
 
 HIRBuilder::ElseThen HIRBuilder::If(const terminal::If& if_) {
     ASSERT_MSG(current_function, "current function is null!");
-    current_function->EndBlock(if_);
     auto pre_block = current_function->current_block;
+    current_function->EndBlock(if_);
     auto else_ = GetNextLocation(if_.else_);
     auto then_ = GetNextLocation(if_.then_);
     auto else_block = current_function->AppendBlock(else_);
@@ -224,9 +268,9 @@ HIRBuilder::ElseThen HIRBuilder::If(const terminal::If& if_) {
 
 Vector<HIRBuilder::CaseBlock> HIRBuilder::Switch(const terminal::Switch& switch_) {
     ASSERT_MSG(current_function, "current function is null!");
+    auto pre_block = current_function->current_block;
     current_function->EndBlock(switch_);
     auto case_size = switch_.cases.size();
-    auto pre_block = current_function->current_block;
     Vector<HIRBuilder::CaseBlock> result{case_size};
     for (int i = 0; i < case_size; i++) {
         auto next_location = GetNextLocation(switch_.cases[i].then);
@@ -239,8 +283,8 @@ Vector<HIRBuilder::CaseBlock> HIRBuilder::Switch(const terminal::Switch& switch_
 
 HIRBlock* HIRBuilder::LinkBlock(const terminal::LinkBlock& link) {
     ASSERT_MSG(current_function, "current function is null!");
-    current_function->EndBlock(link);
     auto pre_block = current_function->current_block;
+    current_function->EndBlock(link);
     auto next_block = current_function->AppendBlock(link.next);
     current_function->AddEdge(pre_block, next_block, false);
     return next_block;

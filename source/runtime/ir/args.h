@@ -78,6 +78,9 @@ public:
 
     [[nodiscard]] ValueType Type() const;
 
+    void Use() const;
+    void UnUse() const;
+
 private:
     Inst* inst{};
 };
@@ -88,17 +91,17 @@ public:
     TypedValue() = default;
 
     template<ValueType other_type>
-    /* implicit */ TypedValue(const TypedValue<other_type>& value)
+    constexpr TypedValue(const TypedValue<other_type>& value)
             : Value(value) {
         ASSERT(value.Type() != type_);
     }
 
-    explicit TypedValue(const Value& value)
+    constexpr TypedValue(const Value& value)
             : Value(value) {
         SetType(type_);
     }
 
-    explicit TypedValue(Inst* inst)
+    constexpr TypedValue(Inst* inst)
             : TypedValue(Value(inst)) {
         SetType(type_);
     }
@@ -276,11 +279,11 @@ public:
 
     [[nodiscard]] Op GetOp() const;
 
-    const Type GetLeft() const {
+    Type GetLeft() const {
         return left;
     }
 
-    const Type GetRight() const {
+    Type GetRight() const {
         return right;
     }
 

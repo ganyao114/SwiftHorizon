@@ -69,6 +69,8 @@ struct ValueAllocated {
 
 #pragma pack(push, 1)
 struct HIRUse {
+    constexpr static auto USE_NIL = 255;
+    constexpr static auto USE_PHI = 254;
     Inst* inst;
     u8 arg_idx;
     IntrusiveListNode list_node{};
@@ -106,12 +108,34 @@ struct HIRValue {
         }
     }
 };
-#pragma pack(pop, 4)
 
 struct HIRLocal {
     Local local;
     HIRValue* current_value{};
 };
+
+struct HIRPhi {
+    struct PhiNode {
+        IntrusiveListNode list_node;
+        HIRValue *value;
+
+        explicit PhiNode(HIRValue* value) : value(value) {}
+    };
+
+    using PhiNodes = IntrusiveList<&PhiNode::list_node>;
+
+    explicit HIRPhi(HIRPools& pools, HIRValue* value);
+
+    HIRPools &pools;
+    HIRValue *value;
+    PhiNodes inputs{};
+    IntrusiveListNode list_node;
+
+    void AddInput(HIRValue *input);
+};
+#pragma pack(pop, 4)
+
+using HIRPhiList = IntrusiveList<&HIRPhi::list_node>;
 
 using HIRValueMap = IntrusiveMap<&HIRValue::map_node>;
 
@@ -125,7 +149,9 @@ public:
     explicit HIRBlock(Block* block, HIRValueMap& values, HIRPools& pools);
 
     void AppendInst(Inst* inst);
+    HIRPhi *AppendPhi();
     HIRValueMap& GetHIRValues();
+    const HIRPhiList& GetPhis();
     [[nodiscard]] u16 GetOrderId() const;
 
     void AddOutgoingEdge(Edge* edge);
@@ -157,6 +183,7 @@ public:
 private:
     u16 order_id{};
     Block* block;
+    HIRFunction *function;
     HIRPools& pools;
     HIRValueMap& values;
     IntrusiveList<&Edge::outgoing_edges> outgoing_edges{};
@@ -164,6 +191,7 @@ private:
     HIRBlockVector predecessors;
     HIRBlockVector successors;
     BackEdgeList back_edges{};
+    HIRPhiList phis{};
     HIRBlock* dominator{};
 };
 
@@ -171,6 +199,7 @@ using HIRBlockList = IntrusiveList<&HIRBlock::list_node>;
 
 class HIRFunction : public DataContext {
     friend class HIRBuilder;
+    friend class HIRBlock;
 
 public:
     explicit HIRFunction(Function* function,
@@ -186,9 +215,17 @@ public:
         return inst;
     }
 
+#define INST(name, ret, ...)                                                                       \
+    template <typename... Args> ret name(const Args&... args) {                                    \
+        return ret{AppendInst(OpCode::name, args...)};                                             \
+    }
+#include "ir.inc"
+#undef INST
+
     HIRBlock* AppendBlock(Location start, Location end = {});
     void AppendInst(Inst* inst);
     void DestroyHIRValue(HIRValue* value);
+    HIRBlock *GetCurrentBlock();
     HIRBlockVector& GetHIRBlocks();
     HIRBlockList& GetHIRBlockList();
     HIRBlockList& GetHIRBlocksRPO();
@@ -199,6 +236,7 @@ public:
     void RemoveEdge(Edge* edge);
     void MergeAdjacentBlocks(HIRBlock* left, HIRBlock* right);
     bool SplitBlock(HIRBlock* new_block, HIRBlock* old_block);
+    void IdByRPO();
 
     void EndBlock(Terminal terminal);
     void EndFunction();
@@ -210,6 +248,8 @@ public:
     IntrusiveListNode list_node;
 
 private:
+    HIRBlock *CreateOrGetBlock(Location location);
+
     struct {
         u32 current_slot{0};
     } spill_stack{};
@@ -269,7 +309,7 @@ public:
 
     explicit HIRBuilder(u32 func_cap = 1);
 
-    void AppendFunction(Location start, Location end = {});
+    HIRFunction *AppendFunction(Location start, Location end = {});
 
     HIRFunctionList& GetHIRFunctions();
 

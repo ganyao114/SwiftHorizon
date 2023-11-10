@@ -18,6 +18,16 @@ ValueType Value::Type() const {
     return Def()->ReturnType();
 }
 
+void Value::Use() const {
+    ASSERT(Def());
+    Def()->num_use++;
+}
+
+void Value::UnUse() const {
+    ASSERT(Def());
+    Def()->num_use--;
+}
+
 Lambda::Lambda() { address.type = ArgType::Void; }
 
 Lambda::Lambda(const Imm& imm) {

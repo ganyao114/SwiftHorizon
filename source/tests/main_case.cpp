@@ -14,7 +14,7 @@ TEST_CASE("Test runtime-init") {
     Block::InitializeSlabHeap(0x10000);
     Function::InitializeSlabHeap(0x2000);
     HIRBuilder hir_builder{1};
-    hir_builder.AppendFunction(Location{0}, Location{0x10});
+    auto function = hir_builder.AppendFunction(Location{0}, Location{0x10});
     Local local_arg1{
             .id = 0,
             .type = ValueType::U32,
@@ -23,14 +23,26 @@ TEST_CASE("Test runtime-init") {
             .id = 1,
             .type = ValueType::U32,
     };
-    auto const1 = hir_builder.LoadImm(Imm(UINT32_MAX));
-    hir_builder.StoreLocal(local_arg1, const1);
-    auto local1 = hir_builder.LoadLocal(local_arg1);
-    hir_builder.StoreLocal(local_arg2, local1);
-    auto local2 = hir_builder.LoadLocal(local_arg2);
+    Local local_arg3{
+            .id = 2,
+            .type = ValueType::U32,
+    };
+    auto const1 = function->LoadImm(Imm(UINT32_MAX));
+    auto const2 = function->LoadImm(Imm(UINT32_MAX-1));
+    function->StoreLocal(local_arg1, const1);
+    auto local1 = function->LoadLocal(local_arg1);
+    function->StoreLocal(local_arg2, local1);
+    auto local2 = function->LoadLocal(local_arg2);
+    hir_builder.If(terminal::If{local2, terminal::LinkBlock{1}, terminal::LinkBlock{2}});
+    hir_builder.LinkBlock(terminal::LinkBlock{3});
+    function->StoreLocal(local_arg3, const1);
+    hir_builder.LinkBlock(terminal::LinkBlock{3});
+    function->StoreLocal(local_arg3, const2);
+    function->StoreUniform(Uniform{0, ValueType::U32}, function->LoadLocal(local_arg3));
     hir_builder.Return();
     CFGAnalysisPass::Run(&hir_builder);
     LocalEliminationPass::Run(&hir_builder);
+
     assert(local2.Defined());
 
     MemMap mem_arena{0x100000, true};

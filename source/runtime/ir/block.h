@@ -32,6 +32,7 @@ public:
     void DestroyInst(Inst* inst);
 
     void SetEndLocation(Location location);
+    Location GetStartLocation();
 
     InstList &GetInstList();
 

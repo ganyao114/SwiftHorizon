@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <map>
 #include "runtime/ir/function.h"
 #include "runtime/backend/code_cache.h"
 #include "runtime/backend/translate_table.h"

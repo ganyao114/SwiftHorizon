@@ -12,7 +12,7 @@ class Location {
 public:
     constexpr Location() = default;
 
-    explicit Location(size_t value) : value(value) {}
+    constexpr Location(size_t value) : value(value) {}
 
     bool operator==(const Location& o) const { return value == o.Value(); }
 

@@ -13,7 +13,7 @@ INST(CompareAndSwap, Value, Value, Value, Value)
 INST(CallLambda, Value, Lambda, Value, Value, Value)
 INST(CallLocation, Value, Lambda)
 INST(CallDynamic, Value, Lambda)
-INST(AddPhi, Value, Value, Value)
+INST(AddPhi, Value, Value, Value, Value, Value)
 
 // Imm
 INST(LoadImm, Value, Imm)

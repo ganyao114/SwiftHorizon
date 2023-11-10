@@ -45,7 +45,9 @@ using Terminal = boost::variant<
 
 struct If {
     If(BOOL cond, Terminal then_, Terminal else_)
-            : cond(cond), then_(std::move(then_)), else_(std::move(else_)) {}
+            : cond(cond), then_(std::move(then_)), else_(std::move(else_)) {
+        cond.Use();
+    }
     BOOL cond;
     Terminal then_;
     Terminal else_;
@@ -58,7 +60,9 @@ struct Switch {
     };
 
     Switch(Value value, const Vector<Case> &cases)
-            : value(value), cases(cases) {}
+            : value(value), cases(cases) {
+        value.Use();
+    }
     Value value;
     Vector<Case> cases;
 };

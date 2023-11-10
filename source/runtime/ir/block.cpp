@@ -3,6 +3,7 @@
 //
 
 #include "block.h"
+#include "runtime/common/variant_util.h"
 
 namespace swift::runtime::ir {
 Terminal Block::GetTerminal() const { return block_term; }
@@ -19,16 +20,14 @@ void Block::DestroyInst(Inst* inst) {
     delete inst;
 }
 
-void Block::SetEndLocation(Location end_) {
-    this->end = end_;
-}
+void Block::SetEndLocation(Location end_) { this->end = end_; }
 
-InstList& Block::GetInstList() {
-    return inst_list;
-}
+Location Block::GetStartLocation() { return location; }
+
+InstList& Block::GetInstList() { return inst_list; }
 
 Block::~Block() {
-    for (auto &inst : inst_list) {
+    for (auto& inst : inst_list) {
         DestroyInst(&inst);
     }
 }

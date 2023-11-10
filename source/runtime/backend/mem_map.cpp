@@ -197,7 +197,7 @@ public:
         return res;
     }
 
-    void Free(u32 host_offset, u32 length) {
+    void Free(u32 host_offset, u32 length) const {
 #ifdef __APPLE__
         madvise(backing_memory + host_offset, length, MADV_DONTNEED);
 #else
@@ -207,9 +207,9 @@ public:
 
     bool Unmap(void* mem, u32 size) { return munmap(mem, size); }
 
-    u8* GetBackend() { return backing_memory; }
+    u8* GetBackend() const { return backing_memory; }
 
-    virtual ~Impl() {}
+    virtual ~Impl() = default;
 
     const bool executable;
     int fd{};
